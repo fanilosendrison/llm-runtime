@@ -218,9 +218,12 @@ describe('stats contracts', () => {
     it('C-ST-10 | stats fields are readonly (TS + runtime no-op or throw)', () => {
       const adapter = createAnthropicAdapter(baseConfig());
       const initial = adapter.stats.totalCalls;
-      // @ts-expect-error — totalCalls is readonly on AdapterStats
-      adapter.stats.totalCalls = 9_999;
-      // Either no-op (sloppy) or throw in strict mode — observed value unchanged.
+      try {
+        // @ts-expect-error — totalCalls is readonly on AdapterStats
+        adapter.stats.totalCalls = 9_999;
+      } catch {
+        // Strict mode or frozen: TypeError is acceptable.
+      }
       expect(adapter.stats.totalCalls).toBe(initial);
       // Compile-time check: AdapterStats is readonly.
       const _snapshot: Readonly<AdapterStats> = adapter.stats;

@@ -742,11 +742,10 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         messages: [{ role: 'user', content: 'Hi' }],
       });
 
-      // After first fetch resolves (500) and retry sleep is armed, expect at
-      // most a small constant number of timers (retry + possibly a timeout).
+      // NIB-T §18.7: at most one internal timer active during a call.
       await vi.advanceTimersByTimeAsync(0);
       const mid = vi.getTimerCount();
-      expect(mid).toBeLessThanOrEqual(3);
+      expect(mid).toBeLessThanOrEqual(1);
 
       await vi.advanceTimersByTimeAsync(2000);
       await promise;

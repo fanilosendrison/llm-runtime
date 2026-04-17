@@ -89,11 +89,15 @@ describe('errors contracts', () => {
 
     it('C-ER-04 | kind is readonly (TS + runtime mutation is no-op or throws)', () => {
       const err = new AuthError();
-      // @ts-expect-error — kind is declared readonly in the public surface.
-      err.kind = 'x';
-      // Runtime: in strict mode the assignment throws; otherwise it is a no-op.
-      // Either way, the observable value must remain the original kind.
-      expect(err.kind).toBe('auth');
+      const original = err.kind;
+      try {
+        // @ts-expect-error — kind is declared readonly in the public surface.
+        err.kind = 'x';
+      } catch {
+        // Strict mode or frozen: TypeError is acceptable.
+      }
+      // Observable value must remain the original kind, regardless of mode.
+      expect(err.kind).toBe(original);
     });
 
     it('C-ER-05 | isRetriableKind === true for retriable kinds', () => {

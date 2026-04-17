@@ -81,3 +81,4 @@ PROJECT_INDEX.md
 SPEC_MANIFEST.md
 CLAUDE.md
 .index-state.json
+.claude/run/

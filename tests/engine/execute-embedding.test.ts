@@ -370,17 +370,18 @@ describe('executeEmbedding — (§20)', () => {
       expect(err.attempts).toBe(5);
     });
 
-    it('T-EE-21 | batches 0 emit llm_embedding_batch; batch 2 does not', async () => {
+    it('T-EE-21 | batches 0 and 1 emit llm_embedding_batch; batch 2 does not', async () => {
       vi.useFakeTimers();
       const { logger, adapter } = setup();
       await runToFailure(adapter);
 
+      // NIB-M-EXECUTE-EMBEDDING §3.5.8: llm_embedding_batch fires at the START
+      // of each attempt. Scenario: batch 0 succeeds once, batch 1 retried 5x, batch 2 never fires.
       const batches = logger.findAll('llm_embedding_batch') as LLMEmbeddingBatchEvent[];
-      // Only batch 0 should have a completion event (batch 1 fails before emitting).
-      expect(batches.length).toBeLessThanOrEqual(1);
-      if (batches.length === 1) {
-        expect(batches[0]?.batchIndex).toBe(0);
-      }
+      const indices = batches.map((b) => b.batchIndex).sort();
+      expect(indices.filter((i) => i === 0).length).toBeGreaterThanOrEqual(1);
+      expect(indices.filter((i) => i === 1).length).toBeGreaterThanOrEqual(1);
+      expect(indices).not.toContain(2);
     });
   });
 
@@ -547,7 +548,7 @@ describe('executeEmbedding — (§20)', () => {
       await adapter.embed(['a']);
       await adapter.embed(['a']);
 
-      expect(adapter.stats.totalDurationMs).toBeGreaterThanOrEqual(0);
+      expect(adapter.stats.totalDurationMs).toBeGreaterThan(0);
     });
 
     it('T-EE-29 | adapter.stats.totalInputTokens === 0 (v1 convention)', async () => {

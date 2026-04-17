@@ -218,13 +218,21 @@ describe('global contract', () => {
     });
 
     it('C-GL-14 | createOpenAICompatibleAdapter with unknown provider is refused (TS + runtime throw)', () => {
-      expect(() =>
+      let caught: unknown;
+      try {
         createOpenAICompatibleAdapter({
           ...baseConfig(),
           // @ts-expect-error — "unknown-xyz" is not assignable to OpenAICompatibleProvider
           provider: 'unknown-xyz',
-        }),
-      ).toThrow();
+        });
+      } catch (e) {
+        caught = e;
+      }
+      // Must throw, and either TypeError (TS runtime) or an LLMRuntimeError subclass
+      // (validation at factory boundary — cf. NIB-T §26.3 C-GL-14).
+      expect(caught).toBeDefined();
+      const ok = caught instanceof TypeError || caught instanceof LLMRuntimeError;
+      expect(ok).toBe(true);
     });
   });
 

@@ -834,11 +834,11 @@ describe('observability contracts', () => {
           endpoint: 'https://api.anthropic.com/v1/messages',
           messagesCount: 1,
         });
-      } catch {
-        // stub throws — skip assertion payload, but must still be structurally JSON when GREEN.
       } finally {
         spy.mockRestore();
       }
+      // Must have written at least one line (catches "silent no-op" regression).
+      expect(written.length).toBeGreaterThan(0);
       for (const line of written) {
         for (const part of line.split('\n').filter((s) => s.length > 0)) {
           expect(() => JSON.parse(part)).not.toThrow();
@@ -864,11 +864,10 @@ describe('observability contracts', () => {
           endpoint: 'https://api.anthropic.com/v1/messages',
           messagesCount: 1,
         });
-      } catch {
-        // stub — assertion runs over whatever was written (possibly empty).
       } finally {
         spy.mockRestore();
       }
+      expect(written.length).toBeGreaterThan(0);
       for (const line of written) {
         expect(line.includes('\r\n')).toBe(false);
       }
@@ -894,12 +893,10 @@ describe('observability contracts', () => {
           endpoint: 'https://api.anthropic.com/v1/messages',
           messagesCount: 1,
         });
-      } catch {
-        // stub
       } finally {
         spy.mockRestore();
       }
-      // If anything was written, it must round-trip through UTF-8 decode.
+      expect(written.length).toBeGreaterThan(0);
       for (const buf of written) {
         const decoded = Buffer.from(buf).toString('utf8');
         expect(typeof decoded).toBe('string');
