@@ -1,8 +1,8 @@
 # Backlog
 
-Items residuels apres `/backlog-deep-crush` du 2026-04-17 (session deepcrush-001, 53 items resolus sur 101).
+Items residuels apres `/backlog-deep-crush` du 2026-04-17 (session deepcrush-001, 53 items resolus sur 101). Le 2026-04-18, les 2 meta-items spec-drift ("19 derives" + "44 drifts types") ont ete remplaces par 16 items atomiques avec `drift_id` stable, en application de la nouvelle regle "1 finding = 1 ligne" (cf. `~/.claude/skills/fix-or-backlog/SKILL.md`).
 
-Les items ci-dessous sont annotes `(blocked: YYYY-MM-DD, skipped Nx)` pour persistance cross-session : `/backlog-deep-crush` les skippe tant que le marqueur `(blocked:` n'est pas retire manuellement.
+Les items ci-dessous sont annotes `(blocked: YYYY-MM-DD, skipped Nx)` pour persistance cross-session : `/backlog-deep-crush` les skippe tant que le marqueur `(blocked:` n'est pas retire manuellement. Les items spec-drift atomiques n'ont PAS de marqueur `blocked` — ils sont frais et peuvent etre traites par `backlog-fix` des le prochain cycle.
 
 Trois categories de blocage :
 - **Spec decisions** : necessite amendement de NIB-S/NIB-M ou arbitrage humain (event naming, parseResponse signature, kind field vs getter, constructor init-bag).
@@ -15,7 +15,24 @@ Trois categories de blocage :
 
 ### Types / spec-drift
 
-- [ ] [MAJOR] src/types.ts + src/bindings/types.ts — 19 derives spec-drift entre stubs src/ et NIB-S : ProviderBinding/EmbeddingBinding sans field `provider`, parseResponse `body: unknown` vs spec `httpBody: string`, readonly vs mutable arrays, RetryDecision/ThrottleDecision discriminants, LLMIntegrityInfo.truncationMode manque `silent_prompt_truncation`, EmbeddingAdapter.embed signature divergente, AdapterConfig retry optional vs required, providerOptions `Record<string,unknown>` vs `unknown`. Fix en GREEN apres consommation NIB-S §5/§6. (date: 2026-04-17, source: /spec-drift iter-0) (blocked: 2026-04-17, skipped 2x)
+Items atomiques derives de `spec-drift.json` (17 drifts detectes, 16 drift_id uniques). Chaque ligne = 1 drift atomique, dedupable par `drift_id`. Remplace les 2 ex-meta-items "19 derives" et "44 drifts types" (ex-MAJOR + ex-NOTABLE) en application de la regle "1 finding = 1 ligne" (cf. ~/.claude/skills/fix-or-backlog/SKILL.md).
+
+- [ ] [notable] spec-drift[EmbeddingBinding] — src/bindings/types.ts <-> specs/NIB-M-BINDING-EMBEDDING.md:40 — Property 'provider' is missing in type 'EmbeddingBinding' (date: 2026-04-18, drift_id: 88ed555f52e1e1c4)
+- [ ] [notable] spec-drift[ProviderBinding] — src/bindings/types.ts <-> specs/NIB-M-BINDINGS-COMPLETION.md:43 — Signature divergence: parseResponse (body: unknown) vs spec (httpBody: string); readRateLimitHeaders extra nowMono/nowWall args (date: 2026-04-18, drift_id: ec040b59dd7facad)
+- [ ] [notable] spec-drift[BindingConfig] — src/bindings/types.ts <-> specs/NIB-M-BINDINGS-COMPLETION.md:43 — providerOptions Record<string,unknown> vs spec unknown (date: 2026-04-18, drift_id: a3362656fe8f2b83)
+- [ ] [notable] spec-drift[RetryDecision] — src/services/retry-resolver.ts <-> specs/NIB-M-RETRY-RESOLVER.md:50 — Code uses discriminated union { retry: true | false } vs spec flat { retry: boolean } (date: 2026-04-18, drift_id: c7643cc052128dbe)
+- [ ] [notable] spec-drift[ThrottleDecision] — src/services/throttle-resolver.ts <-> specs/NIB-M-THROTTLE.md:49 — Code uses discriminated union { throttle: true | false } vs spec flat { throttle: boolean } (date: 2026-04-18, drift_id: c1fc0d7134eb6586)
+- [ ] [notable] spec-drift[LLMMessage] — src/types.ts <-> specs/NIB-S-LLMRUNTIME.md:257 — LLMRequest/LLMMessage readonly arrays in code vs mutable in spec §5.1 (I-11 override: code intentionally stricter) (date: 2026-04-18, drift_id: f19c96e426719584)
+- [ ] [notable] spec-drift[EmbeddingAdapter] — src/types.ts <-> specs/NIB-S-LLMRUNTIME.md:257 — embed(texts, signal?) vs spec embed(texts, options?: { signal? }) — options-bag signature (date: 2026-04-18, drift_id: b0b490e056f06b6c)
+- [ ] [notable] spec-drift[AdapterConfig] — src/types.ts <-> specs/NIB-S-LLMRUNTIME.md:257 — retry/timeout/sanitization/integrity/logging optional in code vs required in spec; providerOptions Record<string,unknown> vs unknown (date: 2026-04-18, drift_id: ec3eedc925ad56a0)
+- [ ] [notable] spec-drift[IntegrityPolicy] — src/types.ts <-> specs/NIB-S-LLMRUNTIME.md:388 — failOn* fields optional in code vs required in spec §5.2 (date: 2026-04-18, drift_id: 1c6072973c3de2a9)
+- [ ] [notable] spec-drift[LoggingPolicy] — src/types.ts <-> specs/NIB-S-LLMRUNTIME.md:388 — enabled field optional in code vs required in spec §5.2 (date: 2026-04-18, drift_id: 54c17c108e2d9c2c)
+- [ ] [notable] spec-drift[CanonicalHttpRequest] — src/bindings/types.ts <-> specs/NIB-S-LLMRUNTIME.md:454 — bodyKind 'json' in code vs 'json' | 'empty' in spec §6.1; bodyJson required vs optional (date: 2026-04-18, drift_id: 275d838a7c3d9d87)
+- [ ] [notable] spec-drift[BindingConfig] — src/bindings/types.ts <-> specs/NIB-S-LLMRUNTIME.md:514 — providerOptions Record<string,unknown> vs spec §6.4 unknown (date: 2026-04-18, drift_id: c712d9d8b7bc6b07)
+- [ ] [notable] spec-drift[ProviderBinding] — src/bindings/types.ts <-> specs/NIB-S-LLMRUNTIME.md:529 — parseResponse(body: unknown) vs spec §6.5 parseResponse(httpBody: string); readRateLimitHeaders extra args (date: 2026-04-18, drift_id: 8f20a0551878582d)
+- [ ] [notable] spec-drift[EmbeddingBinding] — src/bindings/types.ts <-> specs/NIB-S-LLMRUNTIME.md:549 — Property 'provider' missing; buildRequest readonly string[] vs spec §6.6 mutable (date: 2026-04-18, drift_id: 4c8f0a7bd3f44089)
+- [ ] [notable] spec-drift[RetryDecision] — src/services/retry-resolver.ts <-> specs/NIB-S-LLMRUNTIME.md:564 — Discriminated union vs spec §6.7 flat (date: 2026-04-18, drift_id: df5f65a323416b5b)
+- [ ] [notable] spec-drift[ThrottleDecision] — src/services/throttle-resolver.ts <-> specs/NIB-S-LLMRUNTIME.md:564 — Discriminated union vs spec §6.7 flat (date: 2026-04-18, drift_id: f59f9759b6087605)
 
 ### Tests engine clock / timer tracking
 
@@ -65,7 +82,6 @@ Trois categories de blocage :
 
 - [ ] [NOTABLE] src/factories/openai-compatible.ts — providerOptions in AdapterConfig comme Record<string,unknown> au lieu de spec unknown. Fix : aligner avec spec ou documenter. (date: 2026-04-17, source: /senior-review iter-1) (blocked: 2026-04-17, skipped 2x)
 - [ ] [NOTABLE] src/engine/execute-embedding.ts:138-352 — totalBatches inconsistent sur success (batches.length) vs failure (batchIndex). Fix : batchIndex+1 ou split en failedBatchIndex. (date: 2026-04-17, source: /senior-review iter-1) (blocked: 2026-04-17, skipped 2x)
-- [ ] [NOTABLE] spec-drift (44 drifts types) — src/types.ts et src/bindings/types.ts divergent de specs: readonly[], discriminants, bodyKind "empty", providerOptions typing, missing provider field. Fix : aligner types au fur et a mesure ou amend NIB-S. (date: 2026-04-17, source: /spec-drift iter-1) (blocked: 2026-04-17, skipped 2x)
 
 ### Post-GREEN review (loop-clean iter-2)
 
