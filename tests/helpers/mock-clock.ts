@@ -1,0 +1,85 @@
+// NIB-T §27.2 — controllable wall + monotone clocks for deterministic tests.
+// Test-time utility (not production code).
+//
+// Install/uninstall pattern:
+//   The `install()` helper writes the current mock into `mockClockRegistry.current`,
+//   which the test file wires into `src/infra/clock.js` via `vi.doMock` at the top
+//   of the test, e.g.:
+//
+//     import { mockClockRegistry } from '../helpers/mock-clock.js';
+//     vi.doMock('../../src/infra/clock.js', () => ({
+//       defaultClock: {
+//         nowWall: () => mockClockRegistry.current?.nowWall() ?? new Date(),
+//         nowWallIso: () => mockClockRegistry.current?.nowWallIso() ?? new Date().toISOString(),
+//         nowMono: () => mockClockRegistry.current?.nowMono() ?? performance.now(),
+//       },
+//     }));
+//
+// This keeps the helper free of dynamic `vi.mock` calls (which are hoisted and
+// awkward to parameterize from within a helper).
+
+export interface MockClock {
+  setWall(isoOrDate: string | Date): void;
+  setMono(ms: number): void;
+  advanceMono(ms: number): void;
+  advanceWall(ms: number): void;
+  nowWall(): Date;
+  nowWallIso(): string;
+  nowMono(): number;
+  install(): void;
+  uninstall(): void;
+}
+
+interface MockClockRegistry {
+  current: MockClock | undefined;
+}
+
+export const mockClockRegistry: MockClockRegistry = {
+  current: undefined,
+};
+
+export function createMockClock(
+  initialWall?: string,
+  initialMono?: number,
+): MockClock {
+  let wallMs: number =
+    initialWall !== undefined ? new Date(initialWall).getTime() : 0;
+  let monoMs: number = initialMono ?? 0;
+
+  const clock: MockClock = {
+    setWall(isoOrDate: string | Date): void {
+      wallMs =
+        isoOrDate instanceof Date
+          ? isoOrDate.getTime()
+          : new Date(isoOrDate).getTime();
+    },
+    setMono(ms: number): void {
+      monoMs = ms;
+    },
+    advanceMono(ms: number): void {
+      monoMs += ms;
+    },
+    advanceWall(ms: number): void {
+      wallMs += ms;
+    },
+    nowWall(): Date {
+      return new Date(wallMs);
+    },
+    nowWallIso(): string {
+      return new Date(wallMs).toISOString();
+    },
+    nowMono(): number {
+      return monoMs;
+    },
+    install(): void {
+      mockClockRegistry.current = clock;
+    },
+    uninstall(): void {
+      if (mockClockRegistry.current === clock) {
+        mockClockRegistry.current = undefined;
+      }
+    },
+  };
+
+  return clock;
+}
