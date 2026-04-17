@@ -21,21 +21,18 @@ import {
   classifyErrorBase,
   type ProviderErrorSignal,
 } from '../../src/services/error-classifier-base.js';
-import { isRetriableKind, ALL_LLM_ERROR_KINDS } from '../../src/services/error-kind.js';
-import {
-  parseRetryAfter,
-  resolveRetryDecision,
-} from '../../src/services/retry-resolver.js';
+import { ALL_LLM_ERROR_KINDS, isRetriableKind } from '../../src/services/error-kind.js';
+import { parseRetryAfter, resolveRetryDecision } from '../../src/services/retry-resolver.js';
 import {
   detectHeuristicTruncation,
   stripJsonFence,
   stripThinkingTags,
 } from '../../src/services/sanitizer.js';
-import { estimateCallTokens } from '../../src/services/token-estimator.js';
 import {
-  resolveThrottleDecision,
   type RateLimitSnapshot,
+  resolveThrottleDecision,
 } from '../../src/services/throttle-resolver.js';
+import { estimateCallTokens } from '../../src/services/token-estimator.js';
 import type {
   AdapterConfig,
   EmbeddingAdapterConfig,
@@ -71,9 +68,7 @@ function baseAdapterConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfi
   };
 }
 
-function baseEmbConfig(
-  overrides: Partial<EmbeddingAdapterConfig> = {},
-): EmbeddingAdapterConfig {
+function baseEmbConfig(overrides: Partial<EmbeddingAdapterConfig> = {}): EmbeddingAdapterConfig {
   return {
     model: 'text-embedding-3-small',
     apiKey: 'sk-test',
@@ -300,9 +295,7 @@ describe('property tests', () => {
         }),
       );
       for (let i = 0; i < 1000; i += 1) {
-        await adapter
-          .call({ messages: [{ role: 'user', content: 'hi' }] })
-          .catch(() => undefined);
+        await adapter.call({ messages: [{ role: 'user', content: 'hi' }] }).catch(() => undefined);
       }
       const ids = logger.findAll('llm_call_end').map((e) => e.callId);
       const unique = new Set(ids);
@@ -320,9 +313,7 @@ describe('property tests', () => {
         }),
       );
       for (let i = 0; i < 50; i += 1) {
-        await adapter
-          .call({ messages: [{ role: 'user', content: 'hi' }] })
-          .catch(() => undefined);
+        await adapter.call({ messages: [{ role: 'user', content: 'hi' }] }).catch(() => undefined);
       }
       const ids = logger.findAll('llm_call_end').map((e) => e.callId);
       for (let i = 1; i < ids.length; i += 1) {
@@ -632,9 +623,7 @@ describe('property tests', () => {
         const adapter = createAnthropicAdapter(
           baseAdapterConfig({ providerOptions: { fetch: fetchImpl } }),
         );
-        await adapter
-          .call({ messages: [{ role: 'user', content: 'hi' }] })
-          .catch(() => undefined);
+        await adapter.call({ messages: [{ role: 'user', content: 'hi' }] }).catch(() => undefined);
       } finally {
         (anthropicBinding as { parseResponse: ProviderBinding['parseResponse'] }).parseResponse =
           originalParse;

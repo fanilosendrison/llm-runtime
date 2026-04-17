@@ -7,23 +7,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  AbortedError,
-  TimeoutError,
-  TransientProviderError,
-} from '../../src/errors/index.js';
+import { AbortedError, TimeoutError, TransientProviderError } from '../../src/errors/index.js';
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
-import type {
-  LLMCallEndEvent,
-  LLMCallFetchErrorEvent,
-} from '../../src/types.js';
+import type { LLMCallEndEvent, LLMCallFetchErrorEvent } from '../../src/types.js';
 import { eventAssertions } from '../helpers/event-assertions.js';
 import { scenario } from '../helpers/fetch-scenario.js';
-import {
-  createScenarioFetch,
-  type MockFetch,
-  type MockFetchCall,
-} from '../helpers/mock-fetch.js';
+import { createScenarioFetch, type MockFetch, type MockFetchCall } from '../helpers/mock-fetch.js';
 import { createMockLogger } from '../helpers/mock-logger.js';
 import { createControlledSignal } from '../helpers/mock-signal.js';
 
@@ -113,12 +102,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controller = new AbortController();
       controller.abort();
       let caught: unknown;
-      await adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controller.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(AbortedError);
     });
@@ -128,12 +116,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controller = new AbortController();
       controller.abort();
       let caught: unknown;
-      await adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controller.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect((caught as AbortedError).attempts).toBe(0);
     });
@@ -142,10 +129,9 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const { adapter, fetchMock } = setup();
       const controller = new AbortController();
       controller.abort();
-      await adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controller.signal,
-      ).catch(() => undefined);
+      await adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .catch(() => undefined);
 
       expect(fetchMock.calls).toHaveLength(0);
     });
@@ -154,15 +140,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const { logger, adapter } = setup();
       const controller = new AbortController();
       controller.abort();
-      await adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controller.signal,
-      ).catch(() => undefined);
+      await adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .catch(() => undefined);
 
-      eventAssertions.sequenceMatches(logger.events, [
-        'llm_call_start',
-        'llm_call_end',
-      ]);
+      eventAssertions.sequenceMatches(logger.events, ['llm_call_start', 'llm_call_end']);
       const endEvent = logger.find('llm_call_end') as LLMCallEndEvent | undefined;
       expect(endEvent?.success).toBe(false);
       expect(endEvent?.errorKind).toBe('aborted');
@@ -192,12 +174,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const { adapter } = setup();
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
@@ -210,12 +191,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const { adapter } = setup();
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
@@ -231,17 +211,14 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       vi.useFakeTimers();
       const { logger, adapter } = setup();
       const controlled = createControlledSignal();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch(() => undefined);
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch(() => undefined);
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
 
-      const fetchErr = logger.find('llm_call_fetch_error') as
-        | LLMCallFetchErrorEvent
-        | undefined;
+      const fetchErr = logger.find('llm_call_fetch_error') as LLMCallFetchErrorEvent | undefined;
       expect(fetchErr).toBeDefined();
     });
 
@@ -250,12 +227,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const { adapter } = setup();
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
@@ -275,12 +251,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         name: 'UserCancelled',
       });
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(100, reasonMarker);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
@@ -316,12 +291,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
 
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
       await promise;
@@ -345,10 +319,9 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       });
 
       const controlled = createControlledSignal();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch(() => undefined);
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
       await promise;
@@ -372,10 +345,9 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       });
 
       const controlled = createControlledSignal();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch(() => undefined);
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
       await promise;
@@ -400,12 +372,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
 
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
       await promise;
@@ -452,12 +423,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const longPrompt = 'word '.repeat(500);
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: longPrompt }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: longPrompt }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
       await promise;
@@ -500,10 +470,9 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
 
       const longPrompt = 'word '.repeat(500);
       const controlled = createControlledSignal();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: longPrompt }] },
-        controlled.signal,
-      ).catch(() => undefined);
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: longPrompt }] }, controlled.signal)
+        .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
       await promise;
@@ -527,11 +496,13 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         logging: { logger },
       });
       let caught: unknown;
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
       await vi.advanceTimersByTimeAsync(150);
       await promise;
 
@@ -551,11 +522,13 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         logging: { logger },
       });
       let caught: unknown;
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
       await vi.advanceTimersByTimeAsync(150);
       await promise;
 
@@ -575,11 +548,13 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         logging: { logger },
       });
       let caught: unknown;
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
       await vi.advanceTimersByTimeAsync(150);
       await promise;
 
@@ -601,11 +576,13 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         logging: { logger },
       });
       let caught: unknown;
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
       // 5 attempts × 100ms timeout + 4 retry sleeps (2+4+8+16 = 30s).
       await vi.advanceTimersByTimeAsync(60_000);
       await promise;
@@ -631,12 +608,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       });
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(250);
       await promise;
@@ -660,12 +636,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let settledAt = -1;
       const start = Date.now();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: 'Hi' }] },
-        controlled.signal,
-      ).catch(() => {
-        settledAt = Date.now() - start;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .catch(() => {
+          settledAt = Date.now() - start;
+        });
       controlled.abortAfter(100);
       // Advance just past 100ms.
       await vi.advanceTimersByTimeAsync(120);
@@ -684,9 +659,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       // Mix 5 successful + 5 aborted.
       for (let i = 0; i < 10; i += 1) {
         if (i % 2 === 0) {
-          const fetchMock = createScenarioFetch([
-            scenario.okFixture('anthropic/ok-simple'),
-          ]);
+          const fetchMock = createScenarioFetch([scenario.okFixture('anthropic/ok-simple')]);
           vi.stubGlobal('fetch', fetchMock);
           const logger = createMockLogger();
           const adapter = createAnthropicAdapter({
@@ -707,10 +680,9 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
             logging: { logger },
           });
           const controlled = createControlledSignal();
-          const promise = adapter.call(
-            { messages: [{ role: 'user', content: `abort-${i}` }] },
-            controlled.signal,
-          ).catch(() => undefined);
+          const promise = adapter
+            .call({ messages: [{ role: 'user', content: `abort-${i}` }] }, controlled.signal)
+            .catch(() => undefined);
           controlled.abortAfter(50);
           await vi.advanceTimersByTimeAsync(100);
           await promise;
@@ -783,9 +755,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       // Succeeds on the retry; meanwhile fetch_error event should have been
       // emitted with a networkErrorKind for the 1st attempt.
       expect(response.content).toBe('Hello');
-      const fetchErr = logger.find('llm_call_fetch_error') as
-        | LLMCallFetchErrorEvent
-        | undefined;
+      const fetchErr = logger.find('llm_call_fetch_error') as LLMCallFetchErrorEvent | undefined;
       expect(fetchErr).toBeDefined();
       expect(fetchErr?.networkErrorKind).toBeDefined();
     });
@@ -808,11 +778,13 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         logging: { logger },
       });
       let caught: unknown;
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
       await vi.advanceTimersByTimeAsync(60_000);
       await promise;
 
@@ -837,9 +809,11 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
         logging: { logger },
       });
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
       await vi.advanceTimersByTimeAsync(60_000);
       await promise;
 

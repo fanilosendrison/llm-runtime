@@ -12,11 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AbortedError } from '../../src/errors/index.js';
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import { createGoogleAdapter } from '../../src/factories/google.js';
-import type {
-  LLMCallEndEvent,
-  LLMCallThrottledEvent,
-  LLMRequest,
-} from '../../src/types.js';
+import type { LLMCallEndEvent, LLMCallThrottledEvent, LLMRequest } from '../../src/types.js';
 import { scenario } from '../helpers/fetch-scenario.js';
 import { createScenarioFetch } from '../helpers/mock-fetch.js';
 import { createMockLogger } from '../helpers/mock-logger.js';
@@ -92,9 +88,7 @@ describe('executeCall — throttle (§17)', () => {
       // Flush microtasks so throttle gate fires before the fetch.
       await vi.advanceTimersByTimeAsync(0);
 
-      const throttled = logger.find('llm_call_throttled') as
-        | LLMCallThrottledEvent
-        | undefined;
+      const throttled = logger.find('llm_call_throttled') as LLMCallThrottledEvent | undefined;
       expect(throttled).toBeDefined();
       expect(throttled?.waitMs).toBeGreaterThan(0);
       expect(throttled?.waitMs).toBeLessThanOrEqual(30_000);
@@ -142,9 +136,7 @@ describe('executeCall — throttle (§17)', () => {
   // ───────────────────────── §17.2 pas de throttle si snapshot null ─────────────────────────
   describe('§17.2 pas de throttle si snapshot null', () => {
     it('T-EC-73 | 1st call (no pre-existing snapshot) emits no llm_call_throttled', async () => {
-      const fetchMock = createScenarioFetch([
-        scenario.okFixture('anthropic/ok-simple'),
-      ]);
+      const fetchMock = createScenarioFetch([scenario.okFixture('anthropic/ok-simple')]);
       vi.stubGlobal('fetch', fetchMock);
       const logger = createMockLogger();
       const adapter = createAnthropicAdapter({
@@ -158,9 +150,7 @@ describe('executeCall — throttle (§17)', () => {
     });
 
     it('T-EC-74 | direct fetch on 1st call (no delay)', async () => {
-      const fetchMock = createScenarioFetch([
-        scenario.okFixture('anthropic/ok-simple'),
-      ]);
+      const fetchMock = createScenarioFetch([scenario.okFixture('anthropic/ok-simple')]);
       vi.stubGlobal('fetch', fetchMock);
       const logger = createMockLogger();
       const adapter = createAnthropicAdapter({
@@ -256,12 +246,11 @@ describe('executeCall — throttle (§17)', () => {
 
       const controlled = createControlledSignal();
       let caught: unknown;
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: LONG_PROMPT }] },
-        controlled.signal,
-      ).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, controlled.signal)
+        .catch((err: unknown) => {
+          caught = err;
+        });
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
@@ -276,10 +265,9 @@ describe('executeCall — throttle (§17)', () => {
       logger.reset();
 
       const controlled = createControlledSignal();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: LONG_PROMPT }] },
-        controlled.signal,
-      ).catch(() => undefined);
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, controlled.signal)
+        .catch(() => undefined);
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;
@@ -297,10 +285,9 @@ describe('executeCall — throttle (§17)', () => {
       expect(fetchMock.calls).toHaveLength(1);
 
       const controlled = createControlledSignal();
-      const promise = adapter.call(
-        { messages: [{ role: 'user', content: LONG_PROMPT }] },
-        controlled.signal,
-      ).catch(() => undefined);
+      const promise = adapter
+        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, controlled.signal)
+        .catch(() => undefined);
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
       await promise;

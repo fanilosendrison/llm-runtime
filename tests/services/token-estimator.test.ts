@@ -1,9 +1,9 @@
 // NIB-T §5 — RED-phase tests for estimateCallTokens.
 // Reference: specs/NIB-T-LLMRUNTIME.md §5 (T-TE-01..T-TE-18 + P-TE-a..d).
 
-import { describe, it, expect } from 'vitest';
-import { estimateCallTokens } from '../../src/services/token-estimator.js';
+import { describe, expect, it } from 'vitest';
 import type { RateLimitSnapshot } from '../../src/services/throttle-resolver.js';
+import { estimateCallTokens } from '../../src/services/token-estimator.js';
 import type { LLMMessage } from '../../src/types.js';
 import { seededRandom } from '../helpers/seeded-random.js';
 

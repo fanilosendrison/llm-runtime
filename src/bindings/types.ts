@@ -51,7 +51,10 @@ export interface EmbeddingQuirks {
 
 export interface ProviderBinding {
   readonly buildRequest: (request: LLMRequest, config: BindingConfig) => CanonicalHttpRequest;
-  readonly parseResponse: (body: unknown, headers: Record<string, string>) => ParsedProviderResponse;
+  readonly parseResponse: (
+    body: unknown,
+    headers: Record<string, string>,
+  ) => ParsedProviderResponse;
   readonly classifyError: (signal: ProviderErrorSignal) => LLMRuntimeError;
   readonly readRateLimitHeaders: (
     headers: Record<string, string>,
@@ -76,9 +79,4 @@ export interface EmbeddingBinding {
 
 // ───────────────────────── Compatible providers ─────────────────────────
 
-export type OpenAICompatibleProvider =
-  | 'deepseek'
-  | 'mistral'
-  | 'groq'
-  | 'together'
-  | 'ollama';
+export type OpenAICompatibleProvider = 'deepseek' | 'mistral' | 'groq' | 'together' | 'ollama';

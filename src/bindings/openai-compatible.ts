@@ -1,26 +1,123 @@
-// NIB-M-BINDINGS-COMPLETION — OpenAI-compatible factory (parameterized by provider). Stub only.
+// NIB-M-BINDINGS-COMPLETION §5 — Factory for OpenAI-compatible providers
+// (DeepSeek, Mistral, Groq, Together, Ollama).
 
+import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
+import {
+  buildOpenAILikeRequest,
+  classifyOpenAILikeError,
+  OPENAI_TERMINATION_MAP,
+  parseIntStr,
+  parseOpenAILikeResponse,
+  parseOpenAIResetDuration,
+} from './openai.js';
 import type { OpenAICompatibleProvider, ProviderBinding, ProviderQuirks } from './types.js';
 
-const notImplemented = (): never => {
-  throw new Error('Not implemented');
-};
+const FALLBACK_RESET_MS = 60_000;
 
-export function createOpenAICompatibleBinding(_provider: OpenAICompatibleProvider): ProviderBinding {
-  const quirks: ProviderQuirks = {
-    hasRateLimitHeaders: false,
-    mayRouteModel: false,
-    defaultSanitization: {
-      stripThinkingTags: true,
-      stripJsonFence: false,
-    },
-  };
+function quirksFor(provider: OpenAICompatibleProvider): ProviderQuirks {
+  const defaultSanitization = { stripThinkingTags: true, stripJsonFence: false };
+  switch (provider) {
+    case 'deepseek':
+    case 'mistral':
+    case 'groq':
+    case 'together':
+      return { hasRateLimitHeaders: true, mayRouteModel: false, defaultSanitization };
+    case 'ollama':
+      return { hasRateLimitHeaders: false, mayRouteModel: false, defaultSanitization };
+  }
+}
+
+function readGroqLikeHeaders(
+  headers: Record<string, string>,
+  nowMono: number,
+): RateLimitSnapshot | null {
+  const remaining = parseIntStr(headers['x-ratelimit-remaining-tokens']);
+  const resetStr = headers['x-ratelimit-reset-tokens'];
+  if (remaining === undefined || resetStr === undefined) return null;
+  const resetMs = parseOpenAIResetDuration(resetStr);
+  if (resetMs === undefined) return null;
   return {
-    buildRequest: notImplemented,
-    parseResponse: notImplemented,
-    classifyError: notImplemented,
-    readRateLimitHeaders: notImplemented,
-    terminationMap: Object.freeze({}) as Readonly<Record<string, never>>,
-    quirks,
+    remainingTokens: remaining,
+    resetTokensAt: nowMono + resetMs,
+    lastCallOutputTokens: 0,
+    state: 'known',
+  };
+}
+
+function readMistralHeaders(
+  headers: Record<string, string>,
+  nowMono: number,
+): RateLimitSnapshot | null {
+  const remaining = parseIntStr(headers['x-ratelimit-remaining-tokens']);
+  if (remaining === undefined) return null;
+  const resetStr = headers['x-ratelimit-reset-tokens'];
+  const resetMs = resetStr !== undefined ? parseOpenAIResetDuration(resetStr) : undefined;
+  if (resetMs === undefined) {
+    // Mistral does not expose a reset header → 60s fallback with partial state.
+    return {
+      remainingTokens: remaining,
+      resetTokensAt: nowMono + FALLBACK_RESET_MS,
+      lastCallOutputTokens: 0,
+      state: 'partial',
+    };
+  }
+  return {
+    remainingTokens: remaining,
+    resetTokensAt: nowMono + resetMs,
+    lastCallOutputTokens: 0,
+    state: 'known',
+  };
+}
+
+function readTogetherHeaders(
+  headers: Record<string, string>,
+  nowMono: number,
+): RateLimitSnapshot | null {
+  const remaining = parseIntStr(headers['x-tokenlimit-remaining']);
+  if (remaining === undefined) return null;
+  const resetStr = headers['x-tokenlimit-reset'];
+  const resetSec = parseIntStr(resetStr);
+  if (resetSec === undefined) {
+    return {
+      remainingTokens: remaining,
+      resetTokensAt: nowMono + FALLBACK_RESET_MS,
+      lastCallOutputTokens: 0,
+      state: 'partial',
+    };
+  }
+  return {
+    remainingTokens: remaining,
+    resetTokensAt: nowMono + resetSec * 1000,
+    lastCallOutputTokens: 0,
+    state: 'known',
+  };
+}
+
+function readRateLimitHeadersFor(
+  provider: OpenAICompatibleProvider,
+): (headers: Record<string, string>, nowMono: number) => RateLimitSnapshot | null {
+  switch (provider) {
+    case 'deepseek':
+    case 'ollama':
+      return () => null;
+    case 'mistral':
+      return readMistralHeaders;
+    case 'groq':
+      return readGroqLikeHeaders;
+    case 'together':
+      return readTogetherHeaders;
+  }
+}
+
+export function createOpenAICompatibleBinding(provider: OpenAICompatibleProvider): ProviderBinding {
+  const readFn = readRateLimitHeadersFor(provider);
+  return {
+    buildRequest: (request, config) =>
+      buildOpenAILikeRequest(config.endpoint ?? '', request, config),
+    parseResponse: (body) => parseOpenAILikeResponse(body),
+    classifyError: (signal) => classifyOpenAILikeError(signal, provider),
+    readRateLimitHeaders: (headers, nowMono) => readFn(headers, nowMono),
+    terminationMap: OPENAI_TERMINATION_MAP,
+    quirks: quirksFor(provider),
   };
 }

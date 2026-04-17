@@ -7,11 +7,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  AuthError,
-  ResponseParseError,
-  TransientProviderError,
-} from '../../src/errors/index.js';
+import { AuthError, ResponseParseError, TransientProviderError } from '../../src/errors/index.js';
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import type {
   LLMCallEndEvent,
@@ -23,10 +19,7 @@ import type {
 import { deepFreeze } from '../helpers/deep-freeze.js';
 import { eventAssertions } from '../helpers/event-assertions.js';
 import { scenario } from '../helpers/fetch-scenario.js';
-import {
-  createScenarioFetch,
-  type MockResponse,
-} from '../helpers/mock-fetch.js';
+import { createScenarioFetch, type MockResponse } from '../helpers/mock-fetch.js';
 import { createMockLogger } from '../helpers/mock-logger.js';
 
 const DEFAULT_RETRY: RetryPolicy = {
@@ -255,11 +248,13 @@ describe('executeCall — retry (§16)', () => {
       adapter: ReturnType<typeof createAnthropicAdapter>,
     ): Promise<unknown> {
       let caught: unknown;
-      const promise = adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      const promise = adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
       // 4 retry sleeps between 5 attempts: 2000, 4000, 8000, 16000 = 30_000ms.
       await vi.advanceTimersByTimeAsync(30_000);
       await promise;
@@ -361,11 +356,13 @@ describe('executeCall — retry (§16)', () => {
     it('T-EC-46 | throws AuthError, error.attempts === 1', async () => {
       const { adapter } = setup();
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(AuthError);
       expect((caught as AuthError).attempts).toBe(1);
@@ -373,27 +370,33 @@ describe('executeCall — retry (§16)', () => {
 
     it('T-EC-47 | mockFetch.calls.length === 1 (no retry)', async () => {
       const { adapter, fetchMock } = setup();
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       expect(fetchMock.calls).toHaveLength(1);
     });
 
     it('T-EC-48 | retry_scheduled never emitted', async () => {
       const { logger, adapter } = setup();
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       eventAssertions.noRetryScheduled(logger.events);
     });
 
     it('T-EC-49 | llm_call_end success=false, errorKind=auth', async () => {
       const { logger, adapter } = setup();
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       const endEvent = logger.find('llm_call_end') as LLMCallEndEvent | undefined;
       expect(endEvent?.success).toBe(false);
@@ -504,11 +507,13 @@ describe('executeCall — retry (§16)', () => {
     it('T-EC-52 | throws ResponseParseError, error.attempts === 1', async () => {
       const { adapter } = setup();
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(ResponseParseError);
       expect((caught as ResponseParseError).attempts).toBe(1);
@@ -516,18 +521,22 @@ describe('executeCall — retry (§16)', () => {
 
     it('T-EC-53 | llm_call_parse_error event emitted', async () => {
       const { logger, adapter } = setup();
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       expect(logger.find('llm_call_parse_error')).toBeDefined();
     });
 
     it('T-EC-54 | no retry (fatal)', async () => {
       const { adapter, fetchMock, logger } = setup();
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       expect(fetchMock.calls).toHaveLength(1);
       eventAssertions.noRetryScheduled(logger.events);
@@ -678,9 +687,7 @@ describe('executeCall — retry (§16)', () => {
           headers: {
             'retry-after': '1',
             'anthropic-ratelimit-input-tokens-remaining': '5000',
-            'anthropic-ratelimit-input-tokens-reset': new Date(
-              Date.now() + 30_000,
-            ).toISOString(),
+            'anthropic-ratelimit-input-tokens-reset': new Date(Date.now() + 30_000).toISOString(),
           },
         },
         scenario.okFixture('anthropic/ok-simple'),
@@ -725,11 +732,13 @@ describe('executeCall — retry (§16)', () => {
         logging: { logger },
       });
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(AuthError);
       const err = caught as AuthError;
@@ -751,9 +760,7 @@ describe('executeCall — retry (§16)', () => {
         }),
       );
       for (const request of variations) {
-        const fetchMock = createScenarioFetch([
-          scenario.okFixture('anthropic/ok-simple'),
-        ]);
+        const fetchMock = createScenarioFetch([scenario.okFixture('anthropic/ok-simple')]);
         vi.stubGlobal('fetch', fetchMock);
         const logger = createMockLogger();
         const adapter = createAnthropicAdapter({

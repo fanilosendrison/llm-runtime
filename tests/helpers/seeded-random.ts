@@ -22,8 +22,7 @@ function makeMulberry32(seed: number): () => number {
   };
 }
 
-const ALPHABET =
-  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
+const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ';
 const ROLES: readonly LLMRole[] = ['system', 'user', 'assistant'] as const;
 
 export function seededRandom(seed: number): SeededRandom {

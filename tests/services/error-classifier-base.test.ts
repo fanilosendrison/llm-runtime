@@ -1,23 +1,23 @@
 // NIB-T §9 — RED-phase tests for classifyErrorBase.
 // Reference: specs/NIB-T-LLMRUNTIME.md §9 (T-CL-01..T-CL-25 + P-CL-a, P-CL-b, P-CL-c).
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  classifyErrorBase,
-  type ProviderErrorSignal,
-  type NetworkErrorKind,
-} from '../../src/services/error-classifier-base.js';
-import {
-  LLMRuntimeError,
   AbortedError,
-  TimeoutError,
-  TransientProviderError,
-  InvalidRequestError,
   AuthError,
-  RateLimitError,
+  InvalidRequestError,
+  LLMRuntimeError,
   OverloadedError,
   ProviderProtocolError,
+  RateLimitError,
+  TimeoutError,
+  TransientProviderError,
 } from '../../src/errors/index.js';
+import {
+  classifyErrorBase,
+  type NetworkErrorKind,
+  type ProviderErrorSignal,
+} from '../../src/services/error-classifier-base.js';
 import { seededRandom } from '../helpers/seeded-random.js';
 
 describe('error-classifier-base', () => {

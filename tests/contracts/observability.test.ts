@@ -10,13 +10,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import { createOpenAIEmbeddingAdapter } from '../../src/factories/openai-embeddings.js';
 import { defaultStderrLogger } from '../../src/infra/logger.js';
+import { ALL_LLM_ERROR_KINDS } from '../../src/services/error-kind.js';
 import type {
   AdapterConfig,
   EmbeddingAdapterConfig,
   LLMEvent,
   LLMRequest,
 } from '../../src/types.js';
-import { ALL_LLM_ERROR_KINDS } from '../../src/services/error-kind.js';
 import { eventAssertions } from '../helpers/event-assertions.js';
 import { scenario } from '../helpers/fetch-scenario.js';
 import { createMockFetch, createScenarioFetch } from '../helpers/mock-fetch.js';
@@ -47,9 +47,7 @@ function baseConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
   };
 }
 
-function baseEmbConfig(
-  overrides: Partial<EmbeddingAdapterConfig> = {},
-): EmbeddingAdapterConfig {
+function baseEmbConfig(overrides: Partial<EmbeddingAdapterConfig> = {}): EmbeddingAdapterConfig {
   return {
     model: 'text-embedding-3-small',
     apiKey: 'sk-test',
@@ -132,9 +130,7 @@ describe('observability contracts', () => {
           },
           headers: {
             'anthropic-ratelimit-tokens-remaining': '0',
-            'anthropic-ratelimit-tokens-reset': String(
-              new Date(Date.now() + 60_000).toISOString(),
-            ),
+            'anthropic-ratelimit-tokens-reset': String(new Date(Date.now() + 60_000).toISOString()),
           },
         },
         scenario.ok('anthropic', 'hello'),
@@ -522,9 +518,7 @@ describe('observability contracts', () => {
       const batches = eventAssertions.countOfType(logger.events, 'llm_embedding_batch');
       expect(batches).toBe(3);
       expect(logger.events[0]?.eventType).toBe('llm_embedding_start');
-      expect(logger.events[logger.events.length - 1]?.eventType).toBe(
-        'llm_embedding_end',
-      );
+      expect(logger.events[logger.events.length - 1]?.eventType).toBe('llm_embedding_end');
     });
 
     it('C-OB-22 | llm_call_end is the last event of any completion', async () => {
@@ -568,9 +562,7 @@ describe('observability contracts', () => {
       await adapter
         .call({ messages: [{ role: 'user', content: PII_PROMPT }] })
         .catch(() => undefined);
-      const nonSanitized = logger.events.filter(
-        (e) => e.eventType !== 'llm_call_sanitized',
-      );
+      const nonSanitized = logger.events.filter((e) => e.eventType !== 'llm_call_sanitized');
       eventAssertions.noPIIIn(nonSanitized, [PII_PROMPT]);
     });
 
@@ -586,9 +578,7 @@ describe('observability contracts', () => {
       await adapter
         .call({ messages: [{ role: 'user', content: PII_PROMPT }] })
         .catch(() => undefined);
-      const nonSanitized = logger.events.filter(
-        (e) => e.eventType !== 'llm_call_sanitized',
-      );
+      const nonSanitized = logger.events.filter((e) => e.eventType !== 'llm_call_sanitized');
       eventAssertions.noPIIIn(nonSanitized, [PII_RESPONSE]);
     });
 
@@ -878,9 +868,7 @@ describe('observability contracts', () => {
       const spy = vi
         .spyOn(process.stderr, 'write')
         .mockImplementation((chunk: string | Uint8Array) => {
-          written.push(
-            typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk),
-          );
+          written.push(typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk));
           return true;
         });
       try {

@@ -1,8 +1,8 @@
 // NIB-T §8 — RED-phase tests for composeSignal + abortableSleep.
 // Reference: specs/NIB-T-LLMRUNTIME.md §8 (T-SC-01..T-SC-14 + C-SC-01, C-SC-02 + P-SC-a, P-SC-b).
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { composeSignal, abortableSleep } from '../../src/services/signal-composer.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { abortableSleep, composeSignal } from '../../src/services/signal-composer.js';
 import { createControlledSignal } from '../helpers/mock-signal.js';
 
 describe('signal-composer', () => {

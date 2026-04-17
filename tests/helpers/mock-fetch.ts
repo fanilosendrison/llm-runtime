@@ -84,14 +84,9 @@ function attachMockApi(
   return mock;
 }
 
-export function createMockFetch(
-  response: MockResponse | (() => MockResponse),
-): MockFetch {
+export function createMockFetch(response: MockResponse | (() => MockResponse)): MockFetch {
   const calls: MockFetchCall[] = [];
-  const impl = async (
-    input: FetchInput,
-    init?: FetchInit,
-  ): Promise<Response> => {
+  const impl = async (input: FetchInput, init?: FetchInit): Promise<Response> => {
     const effectiveInit: FetchInit = init ?? {};
     const call: MockFetchCall = {
       url: resolveUrl(input),
@@ -108,10 +103,7 @@ export function createMockFetch(
 export function createScenarioFetch(responses: MockResponse[]): MockFetch {
   const calls: MockFetchCall[] = [];
   let index = 0;
-  const impl = async (
-    input: FetchInput,
-    init?: FetchInit,
-  ): Promise<Response> => {
+  const impl = async (input: FetchInput, init?: FetchInit): Promise<Response> => {
     const effectiveInit: FetchInit = init ?? {};
     const call: MockFetchCall = {
       url: resolveUrl(input),

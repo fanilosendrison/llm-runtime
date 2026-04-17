@@ -1,10 +1,10 @@
 // NIB-T §4 — RED-phase tests for resolveThrottleDecision.
 // Reference: specs/NIB-T-LLMRUNTIME.md §4 (T-TR-01..T-TR-15 + P-TR-a, P-TR-b, P-TR-c).
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  resolveThrottleDecision,
   type RateLimitSnapshot,
+  resolveThrottleDecision,
   type ThrottleDecision,
 } from '../../src/services/throttle-resolver.js';
 import { seededRandom } from '../helpers/seeded-random.js';

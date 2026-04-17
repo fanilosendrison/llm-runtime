@@ -32,9 +32,7 @@ describe('googleBinding', () => {
       expect(http.url).toContain('gemini-2.0-flash:generateContent');
       expect(http.headers['x-goog-api-key']).toBe('AIza-xxx');
       expect(http.headers['authorization']).toBeUndefined();
-      expect(http.bodyJson['contents']).toEqual([
-        { role: 'user', parts: [{ text: 'hi' }] },
-      ]);
+      expect(http.bodyJson['contents']).toEqual([{ role: 'user', parts: [{ text: 'hi' }] }]);
     });
 
     it('T-GG-02 | system message extracted to systemInstruction', () => {
@@ -110,26 +108,18 @@ describe('googleBinding', () => {
     });
 
     it('T-GG-07 | ok-max-tokens yields terminationSignal "MAX_TOKENS"', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/google/ok-max-tokens.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/google/ok-max-tokens.json');
       const parsed = googleBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.terminationSignal).toBe('MAX_TOKENS');
     });
 
     it('T-GG-08 | ok-safety-block throws ContentFilterError directly from parseResponse', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/google/ok-safety-block.json',
-      );
-      expect(() => googleBinding.parseResponse(body, JSON_HEADERS)).toThrow(
-        ContentFilterError,
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/google/ok-safety-block.json');
+      expect(() => googleBinding.parseResponse(body, JSON_HEADERS)).toThrow(ContentFilterError);
     });
 
     it('T-GG-09 | unknown finishReason is passed through raw (mapping done by engine)', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/google/ok-unknown-finish.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/google/ok-unknown-finish.json');
       const parsed = googleBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.terminationSignal).toBe('FOO_UNKNOWN');
     });
@@ -144,9 +134,7 @@ describe('googleBinding', () => {
         },
         modelVersion: 'gemini-2.0-flash-001',
       };
-      expect(() => googleBinding.parseResponse(body, JSON_HEADERS)).toThrow(
-        ResponseParseError,
-      );
+      expect(() => googleBinding.parseResponse(body, JSON_HEADERS)).toThrow(ResponseParseError);
     });
   });
 

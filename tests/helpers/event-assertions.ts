@@ -22,9 +22,7 @@ export const eventAssertions = {
   },
 
   noRetryScheduled(events: LLMEvent[]): void {
-    const retries = events.filter(
-      (e) => e.eventType === 'llm_call_retry_scheduled',
-    );
+    const retries = events.filter((e) => e.eventType === 'llm_call_retry_scheduled');
     expect(retries).toHaveLength(0);
   },
 

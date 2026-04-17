@@ -21,16 +21,16 @@ import {
   TimeoutError,
   TransientProviderError,
 } from '../../src/errors/index.js';
+import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import {
   ALL_LLM_ERROR_KINDS,
   isRetriableKind,
   type LLMErrorKind,
 } from '../../src/services/error-kind.js';
-import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import type { AdapterConfig, LLMRequest } from '../../src/types.js';
-import { createMockLogger } from '../helpers/mock-logger.js';
-import { createScenarioFetch } from '../helpers/mock-fetch.js';
 import { scenario } from '../helpers/fetch-scenario.js';
+import { createScenarioFetch } from '../helpers/mock-fetch.js';
+import { createMockLogger } from '../helpers/mock-logger.js';
 import { createControlledSignal } from '../helpers/mock-signal.js';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

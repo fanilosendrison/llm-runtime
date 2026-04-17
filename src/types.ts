@@ -57,7 +57,8 @@ export interface LLMSanitizationInfo {
 
 export type TruncationMode =
   | 'heuristic_json_unclosed'
-  | 'explicit_max_tokens';
+  | 'explicit_max_tokens'
+  | 'silent_prompt_truncation';
 
 export interface LLMIntegrityInfo {
   readonly truncationDetected: boolean;
@@ -301,4 +302,5 @@ export interface EmbeddingAdapter {
 // ───────────────────────── Error kinds (re-exported for convenience) ─────────────────────────
 
 import type { LLMErrorKind } from './services/error-kind.js';
+
 export type { LLMErrorKind };

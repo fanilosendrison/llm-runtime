@@ -153,33 +153,25 @@ describe('anthropicBinding', () => {
     });
 
     it('T-AN-09 | ok-with-thinking extracts text only (thinking ignored by binding)', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/anthropic/ok-with-thinking.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/anthropic/ok-with-thinking.json');
       const parsed = anthropicBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.rawContent).toBe('Answer');
     });
 
     it('T-AN-10 | ok-max-tokens yields terminationSignal "max_tokens"', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/anthropic/ok-max-tokens.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/anthropic/ok-max-tokens.json');
       const parsed = anthropicBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.terminationSignal).toBe('max_tokens');
     });
 
     it('T-AN-11 | ok-stop-sequence yields terminationSignal "stop_sequence"', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/anthropic/ok-stop-sequence.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/anthropic/ok-stop-sequence.json');
       const parsed = anthropicBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.terminationSignal).toBe('stop_sequence');
     });
 
     it('T-AN-12 | ok-tool-use yields terminationSignal "tool_use" and text-only rawContent', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/anthropic/ok-tool-use.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/anthropic/ok-tool-use.json');
       const parsed = anthropicBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.terminationSignal).toBe('tool_use');
       expect(parsed.rawContent).toBe('Let me check...');
@@ -206,9 +198,7 @@ describe('anthropicBinding', () => {
     });
 
     it('T-AN-15 | empty object body throws ResponseParseError', () => {
-      expect(() => anthropicBinding.parseResponse({}, JSON_HEADERS)).toThrow(
-        ResponseParseError,
-      );
+      expect(() => anthropicBinding.parseResponse({}, JSON_HEADERS)).toThrow(ResponseParseError);
     });
 
     it('T-AN-16 | empty content array yields rawContent === ""', () => {
@@ -229,9 +219,7 @@ describe('anthropicBinding', () => {
         model: 'claude-opus-4-6-20260301',
         usage: { input_tokens: 1, output_tokens: 0 },
       };
-      expect(() => anthropicBinding.parseResponse(body, JSON_HEADERS)).toThrow(
-        ResponseParseError,
-      );
+      expect(() => anthropicBinding.parseResponse(body, JSON_HEADERS)).toThrow(ResponseParseError);
     });
   });
 
@@ -290,11 +278,7 @@ describe('anthropicBinding', () => {
 
     it('T-AN-24 | empty headers yield null', () => {
       const clock = createMockClock('2026-04-17T12:00:00Z', 1000);
-      const snapshot = anthropicBinding.readRateLimitHeaders(
-        {},
-        clock.nowMono(),
-        clock.nowWall(),
-      );
+      const snapshot = anthropicBinding.readRateLimitHeaders({}, clock.nowMono(), clock.nowWall());
       expect(snapshot).toBeNull();
     });
 

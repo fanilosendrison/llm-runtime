@@ -1,4 +1,4 @@
-// NIB-M-THROTTLE — stubs only. RateLimitSnapshot is internal (not exported from index).
+// NIB-M-THROTTLE — pure throttle decision + canonical rate-limit snapshot shape.
 
 export type RateLimitSnapshotState = 'known' | 'unknown' | 'partial';
 
@@ -21,9 +21,25 @@ export type ThrottleDecision =
   | { readonly throttle: true; readonly waitMs: number; readonly reason: ThrottleDecisionReason };
 
 export function resolveThrottleDecision(
-  _snapshot: RateLimitSnapshot | null,
-  _estimatedNextCallTokens: number,
-  _nowMs: number,
+  snapshot: RateLimitSnapshot | null,
+  estimatedNextCallTokens: number,
+  nowMs: number,
 ): ThrottleDecision {
-  throw new Error('Not implemented');
+  if (snapshot === null) {
+    return { throttle: false, reason: 'no_snapshot' };
+  }
+  if (snapshot.state === 'unknown') {
+    return { throttle: false, reason: 'snapshot_unknown_quality' };
+  }
+  if (snapshot.remainingTokens >= estimatedNextCallTokens) {
+    return { throttle: false, reason: 'budget_sufficient' };
+  }
+  if (snapshot.resetTokensAt <= nowMs) {
+    return { throttle: false, reason: 'window_already_reset' };
+  }
+  return {
+    throttle: true,
+    waitMs: snapshot.resetTokensAt - nowMs,
+    reason: 'budget_insufficient',
+  };
 }

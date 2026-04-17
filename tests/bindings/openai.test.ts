@@ -120,17 +120,13 @@ describe('openaiBinding', () => {
     });
 
     it('T-OA-08 | ok-content-filter yields terminationSignal "content_filter"', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/openai/ok-content-filter.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/openai/ok-content-filter.json');
       const parsed = openaiBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.terminationSignal).toBe('content_filter');
     });
 
     it('T-OA-09 | deepseek-r1-think keeps <think> tags in rawContent (engine strips later)', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/openai/ok-deepseek-r1-think.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/openai/ok-deepseek-r1-think.json');
       const parsed = openaiBinding.parseResponse(body, JSON_HEADERS);
       expect(parsed.rawContent).toBe('<think>long reasoning here</think>final answer');
     });
@@ -142,9 +138,7 @@ describe('openaiBinding', () => {
         choices: [],
         usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
       };
-      expect(() => openaiBinding.parseResponse(body, JSON_HEADERS)).toThrow(
-        ResponseParseError,
-      );
+      expect(() => openaiBinding.parseResponse(body, JSON_HEADERS)).toThrow(ResponseParseError);
     });
 
     it('T-OA-11 | choices[0].message.content null yields rawContent === "" and finish_reason passed through', () => {
@@ -218,9 +212,7 @@ describe('openaiBinding', () => {
   describe('§11.4 readRateLimitHeaders', () => {
     it('T-OA-18 | openai-ok fixture yields remainingTokens 142000 with monotone reset', () => {
       const clock = createMockClock('2026-04-17T12:00:00Z', 1000);
-      const headers = loadJsonFixture<Record<string, string>>(
-        'rate-limit-headers/openai-ok.json',
-      );
+      const headers = loadJsonFixture<Record<string, string>>('rate-limit-headers/openai-ok.json');
       const snapshot = openaiBinding.readRateLimitHeaders(
         headers,
         clock.nowMono(),
@@ -236,11 +228,7 @@ describe('openaiBinding', () => {
 
     it('T-OA-19 | empty headers yield null', () => {
       const clock = createMockClock('2026-04-17T12:00:00Z', 1000);
-      const snapshot = openaiBinding.readRateLimitHeaders(
-        {},
-        clock.nowMono(),
-        clock.nowWall(),
-      );
+      const snapshot = openaiBinding.readRateLimitHeaders({}, clock.nowMono(), clock.nowWall());
       expect(snapshot).toBeNull();
     });
 

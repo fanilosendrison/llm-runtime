@@ -102,11 +102,7 @@ describe('createOpenAICompatibleBinding', () => {
         'x-tokenlimit-remaining': '5000',
         'x-tokenlimit-reset': '30',
       };
-      const snapshot = binding.readRateLimitHeaders(
-        headers,
-        clock.nowMono(),
-        clock.nowWall(),
-      );
+      const snapshot = binding.readRateLimitHeaders(headers, clock.nowMono(), clock.nowWall());
       expect(snapshot).not.toBeNull();
       if (snapshot === null) throw new Error('unreachable');
       expect(snapshot.remainingTokens).toBe(5000);
@@ -120,11 +116,7 @@ describe('createOpenAICompatibleBinding', () => {
         'x-tokenlimit-remaining': '5000',
         'x-tokenlimit-reset': '30',
       };
-      const snapshot = binding.readRateLimitHeaders(
-        headers,
-        clock.nowMono(),
-        clock.nowWall(),
-      );
+      const snapshot = binding.readRateLimitHeaders(headers, clock.nowMono(), clock.nowWall());
       expect(snapshot).toBeNull();
     });
   });
@@ -135,11 +127,7 @@ describe('createOpenAICompatibleBinding', () => {
     it('T-OC-09 | empty headers with ollama → null', () => {
       const binding = createOpenAICompatibleBinding('ollama');
       const clock = createMockClock('2026-04-17T12:00:00Z', 1000);
-      const snapshot = binding.readRateLimitHeaders(
-        {},
-        clock.nowMono(),
-        clock.nowWall(),
-      );
+      const snapshot = binding.readRateLimitHeaders({}, clock.nowMono(), clock.nowWall());
       expect(snapshot).toBeNull();
     });
 
@@ -158,11 +146,7 @@ describe('createOpenAICompatibleBinding', () => {
       const headers: Record<string, string> = {
         'x-ratelimit-remaining-tokens': '1000',
       };
-      const snapshot = binding.readRateLimitHeaders(
-        headers,
-        clock.nowMono(),
-        clock.nowWall(),
-      );
+      const snapshot = binding.readRateLimitHeaders(headers, clock.nowMono(), clock.nowWall());
       expect(snapshot).not.toBeNull();
       if (snapshot === null) throw new Error('unreachable');
       expect(snapshot.state).toBe('partial');

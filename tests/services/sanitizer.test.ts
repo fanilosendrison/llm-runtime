@@ -1,11 +1,11 @@
 // NIB-T §7 — RED-phase tests for stripThinkingTags / stripJsonFence / detectHeuristicTruncation.
 // Reference: specs/NIB-T-LLMRUNTIME.md §7 (T-SN-01..T-SN-24 + P-SN-a..d).
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  stripThinkingTags,
-  stripJsonFence,
   detectHeuristicTruncation,
+  stripJsonFence,
+  stripThinkingTags,
 } from '../../src/services/sanitizer.js';
 import { seededRandom } from '../helpers/seeded-random.js';
 

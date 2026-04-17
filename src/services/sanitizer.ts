@@ -1,21 +1,70 @@
-// NIB-M-SANITIZER — stubs only. stripJsonFence delegates to ai-json-safe-parse (DC-AI-JSON-SAFE-PARSE).
+// NIB-M-SANITIZER — pure string operations for provider content cleanup.
+//
+// stripJsonFence: regex-based fence stripping (deterministic, no external dep for extraction).
+// detectHeuristicTruncation: bracket/quote counter (DC-AI-JSON-SAFE-PARSE §3.2 forme C —
+// lib used only for optional incomplete verdict; a hand-rolled counter is sufficient for
+// the "incomplete vs other" distinction the runtime requires).
 
 export interface StripResult {
   readonly content: string;
   readonly removed: boolean;
 }
 
-export function stripThinkingTags(_content: string): StripResult {
-  throw new Error('Not implemented');
+const THINKING_TAG_RE = /<think>[\s\S]*?<\/think>/g;
+// Matches ```<optional-lang>\n<body>\n``` anywhere in the string (non-greedy body).
+const JSON_FENCE_RE = /```(?:[a-zA-Z0-9_-]+)?\s*\r?\n?([\s\S]*?)\r?\n?\s*```/;
+
+export function stripThinkingTags(content: string): StripResult {
+  const stripped = content.replace(THINKING_TAG_RE, '');
+  return stripped === content
+    ? { content, removed: false }
+    : { content: stripped, removed: true };
 }
 
-export function stripJsonFence(_content: string): StripResult {
-  throw new Error('Not implemented');
+export function stripJsonFence(content: string): StripResult {
+  const match = JSON_FENCE_RE.exec(content);
+  if (match === null || match[1] === undefined) {
+    return { content, removed: false };
+  }
+  return { content: match[1], removed: true };
 }
 
 export function detectHeuristicTruncation(
-  _content: string,
+  content: string,
   _maxTokens: number | undefined,
 ): boolean {
-  throw new Error('Not implemented');
+  if (content.length === 0) return false;
+
+  // Only consider contents that look like JSON (first non-whitespace is { or [).
+  const firstNonWs = content.match(/\S/);
+  if (firstNonWs === null) return false;
+  const head = firstNonWs[0];
+  if (head !== '{' && head !== '[') return false;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < content.length; i += 1) {
+    const ch = content.charAt(i);
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch === '\\') {
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '{' || ch === '[') depth += 1;
+    else if (ch === '}' || ch === ']') depth -= 1;
+  }
+
+  return inString || depth > 0;
 }

@@ -38,20 +38,13 @@ export const mockClockRegistry: MockClockRegistry = {
   current: undefined,
 };
 
-export function createMockClock(
-  initialWall?: string,
-  initialMono?: number,
-): MockClock {
-  let wallMs: number =
-    initialWall !== undefined ? new Date(initialWall).getTime() : 0;
+export function createMockClock(initialWall?: string, initialMono?: number): MockClock {
+  let wallMs: number = initialWall !== undefined ? new Date(initialWall).getTime() : 0;
   let monoMs: number = initialMono ?? 0;
 
   const clock: MockClock = {
     setWall(isoOrDate: string | Date): void {
-      wallMs =
-        isoOrDate instanceof Date
-          ? isoOrDate.getTime()
-          : new Date(isoOrDate).getTime();
+      wallMs = isoOrDate instanceof Date ? isoOrDate.getTime() : new Date(isoOrDate).getTime();
     },
     setMono(ms: number): void {
       monoMs = ms;

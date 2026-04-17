@@ -1,26 +1,26 @@
 // NIB-T §6 — RED-phase tests for isRetriableKind + contract invariants C-EK-01, C-EK-02.
 // Reference: specs/NIB-T-LLMRUNTIME.md §6 (T-EK-01..T-EK-11 + C-EK-01, C-EK-02).
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  isRetriableKind,
+  AbortedError,
+  AuthError,
+  ContentFilterError,
+  InvalidRequestError,
+  type LLMRuntimeError,
+  OverloadedError,
+  ProviderProtocolError,
+  RateLimitError,
+  ResponseParseError,
+  SilentTruncationError,
+  TimeoutError,
+  TransientProviderError,
+} from '../../src/errors/index.js';
+import {
   ALL_LLM_ERROR_KINDS,
+  isRetriableKind,
   type LLMErrorKind,
 } from '../../src/services/error-kind.js';
-import {
-  LLMRuntimeError,
-  AuthError,
-  InvalidRequestError,
-  RateLimitError,
-  OverloadedError,
-  TransientProviderError,
-  ProviderProtocolError,
-  ResponseParseError,
-  TimeoutError,
-  AbortedError,
-  SilentTruncationError,
-  ContentFilterError,
-} from '../../src/errors/index.js';
 
 describe('error-kind', () => {
   // ───────────────────────── §6.1 retriable kinds ─────────────────────────

@@ -8,7 +8,7 @@
 // signature to accept a clock parameter explicitly, these tests will need
 // to be refined (NIB-T §3 remains the source of truth).
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseRetryAfter } from '../../src/services/retry-resolver.js';
 import { seededRandom } from '../helpers/seeded-random.js';
 
@@ -133,9 +133,7 @@ describe('parse-retry-after', () => {
     });
 
     it('T-PA-22 | only "retry-after" is read (not "retry-after-ms")', () => {
-      expect(
-        parseRetryAfter({ 'retry-after': '10', 'retry-after-ms': '99999' }),
-      ).toEqual(10000);
+      expect(parseRetryAfter({ 'retry-after': '10', 'retry-after-ms': '99999' })).toEqual(10000);
     });
   });
 

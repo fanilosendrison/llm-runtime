@@ -65,9 +65,7 @@ describe('openaiEmbeddingsBinding', () => {
 
   describe('§14.2 parseEmbeddings', () => {
     it('T-OE-04 | ok-3-texts returns number[][] of length 3 with preserved order', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/openai-embeddings/ok-3-texts.json',
-      );
+      const body = loadJsonFixture<unknown>('provider-responses/openai-embeddings/ok-3-texts.json');
       const out = openaiEmbeddingsBinding.parseEmbeddings(body, JSON_HEADERS);
       expect(out.length).toBe(3);
       expect(out[0]).toEqual([0.1, 0.2, 0.3]);
@@ -92,12 +90,11 @@ describe('openaiEmbeddingsBinding', () => {
       expect(out[2]).toEqual([0.7, 0.8]);
     });
 
-    it('T-OE-06 | ok-empty returns []', () => {
-      const body = loadJsonFixture<unknown>(
-        'provider-responses/openai-embeddings/ok-empty.json',
+    it('T-OE-06 | ok-empty (data:[]) throws ResponseParseError per spec 3.3 step 2', () => {
+      const body = loadJsonFixture<unknown>('provider-responses/openai-embeddings/ok-empty.json');
+      expect(() => openaiEmbeddingsBinding.parseEmbeddings(body, JSON_HEADERS)).toThrow(
+        ResponseParseError,
       );
-      const out = openaiEmbeddingsBinding.parseEmbeddings(body, JSON_HEADERS);
-      expect(out).toEqual([]);
     });
 
     it('T-OE-07 | body without data throws ResponseParseError', () => {

@@ -1,24 +1,21 @@
 // NIB-T §2 — RED-phase acceptance + property tests for resolveRetryDecision.
 // Reference: specs/NIB-T-LLMRUNTIME.md §2 (T-RR-01..T-RR-36 + P-RR-a, P-RR-b).
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  resolveRetryDecision,
-  type RetryDecision,
-} from '../../src/services/retry-resolver.js';
-import {
-  AuthError,
-  InvalidRequestError,
-  ResponseParseError,
-  ContentFilterError,
   AbortedError,
-  ProviderProtocolError,
-  SilentTruncationError,
-  RateLimitError,
+  AuthError,
+  ContentFilterError,
+  InvalidRequestError,
   OverloadedError,
-  TransientProviderError,
+  ProviderProtocolError,
+  RateLimitError,
+  ResponseParseError,
+  SilentTruncationError,
   TimeoutError,
+  TransientProviderError,
 } from '../../src/errors/index.js';
+import { type RetryDecision, resolveRetryDecision } from '../../src/services/retry-resolver.js';
 import type { RetryPolicy } from '../../src/types.js';
 import { seededRandom } from '../helpers/seeded-random.js';
 
@@ -37,13 +34,48 @@ describe('retry-resolver', () => {
       make: () => Error;
       reason: string;
     }> = [
-      { id: 'T-RR-01', description: 'AuthError never retried', make: () => new AuthError(), reason: 'fatal_auth' },
-      { id: 'T-RR-02', description: 'InvalidRequestError never retried', make: () => new InvalidRequestError(), reason: 'fatal_invalid_request' },
-      { id: 'T-RR-03', description: 'ResponseParseError never retried', make: () => new ResponseParseError(), reason: 'fatal_parse_error' },
-      { id: 'T-RR-04', description: 'ContentFilterError never retried', make: () => new ContentFilterError(), reason: 'fatal_content_filter' },
-      { id: 'T-RR-05', description: 'AbortedError never retried', make: () => new AbortedError(), reason: 'fatal_aborted' },
-      { id: 'T-RR-06', description: 'ProviderProtocolError never retried', make: () => new ProviderProtocolError(), reason: 'fatal_protocol' },
-      { id: 'T-RR-07', description: 'SilentTruncationError never retried', make: () => new SilentTruncationError(), reason: 'fatal_truncation' },
+      {
+        id: 'T-RR-01',
+        description: 'AuthError never retried',
+        make: () => new AuthError(),
+        reason: 'fatal_auth',
+      },
+      {
+        id: 'T-RR-02',
+        description: 'InvalidRequestError never retried',
+        make: () => new InvalidRequestError(),
+        reason: 'fatal_invalid_request',
+      },
+      {
+        id: 'T-RR-03',
+        description: 'ResponseParseError never retried',
+        make: () => new ResponseParseError(),
+        reason: 'fatal_parse_error',
+      },
+      {
+        id: 'T-RR-04',
+        description: 'ContentFilterError never retried',
+        make: () => new ContentFilterError(),
+        reason: 'fatal_content_filter',
+      },
+      {
+        id: 'T-RR-05',
+        description: 'AbortedError never retried',
+        make: () => new AbortedError(),
+        reason: 'fatal_aborted',
+      },
+      {
+        id: 'T-RR-06',
+        description: 'ProviderProtocolError never retried',
+        make: () => new ProviderProtocolError(),
+        reason: 'fatal_protocol',
+      },
+      {
+        id: 'T-RR-07',
+        description: 'SilentTruncationError never retried',
+        make: () => new SilentTruncationError(),
+        reason: 'fatal_truncation',
+      },
     ];
 
     for (const { id, description, make, reason } of fatalCases) {
@@ -74,12 +106,22 @@ describe('retry-resolver', () => {
     });
 
     it('T-RR-11 | RateLimitError retry-after=10 → 10000ms', () => {
-      const decision = resolveRetryDecision(new RateLimitError(), 0, { 'retry-after': '10' }, DEFAULT_POLICY);
+      const decision = resolveRetryDecision(
+        new RateLimitError(),
+        0,
+        { 'retry-after': '10' },
+        DEFAULT_POLICY,
+      );
       expect(decision).toEqual({ retry: true, delayMs: 10000, reason: 'transient_rate_limit' });
     });
 
     it('T-RR-12 | RateLimitError retry-after=3 primes over backoff', () => {
-      const decision = resolveRetryDecision(new RateLimitError(), 2, { 'retry-after': '3' }, DEFAULT_POLICY);
+      const decision = resolveRetryDecision(
+        new RateLimitError(),
+        2,
+        { 'retry-after': '3' },
+        DEFAULT_POLICY,
+      );
       expect(decision).toEqual({ retry: true, delayMs: 3000, reason: 'transient_rate_limit' });
     });
 
@@ -89,7 +131,12 @@ describe('retry-resolver', () => {
     });
 
     it('T-RR-14 | OverloadedError retry-after=7 → 7000ms', () => {
-      const decision = resolveRetryDecision(new OverloadedError(), 1, { 'retry-after': '7' }, DEFAULT_POLICY);
+      const decision = resolveRetryDecision(
+        new OverloadedError(),
+        1,
+        { 'retry-after': '7' },
+        DEFAULT_POLICY,
+      );
       expect(decision).toEqual({ retry: true, delayMs: 7000, reason: 'transient_overloaded' });
     });
 

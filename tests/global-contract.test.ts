@@ -30,8 +30,8 @@ import { createGoogleAdapter } from '../src/factories/google.js';
 import { createOpenAIAdapter } from '../src/factories/openai.js';
 import { createOpenAICompatibleAdapter } from '../src/factories/openai-compatible.js';
 import { createOpenAIEmbeddingAdapter } from '../src/factories/openai-embeddings.js';
-import { ALL_PROVIDER_LONG_IDS } from '../src/types.js';
 import type { AdapterConfig, EmbeddingAdapterConfig, LLMRequest } from '../src/types.js';
+import { ALL_PROVIDER_LONG_IDS } from '../src/types.js';
 import { scenario } from './helpers/fetch-scenario.js';
 import { createMockFetch, createScenarioFetch } from './helpers/mock-fetch.js';
 import { createMockLogger } from './helpers/mock-logger.js';
@@ -51,9 +51,7 @@ function baseConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
   };
 }
 
-function baseEmbConfig(
-  overrides: Partial<EmbeddingAdapterConfig> = {},
-): EmbeddingAdapterConfig {
+function baseEmbConfig(overrides: Partial<EmbeddingAdapterConfig> = {}): EmbeddingAdapterConfig {
   return {
     model: 'text-embedding-3-small',
     apiKey: 'sk-test',
@@ -269,9 +267,7 @@ describe('global contract', () => {
   describe('§26.5 fail-closed', () => {
     it('C-GL-17 | empty messages → throws InvalidRequestError', async () => {
       const adapter = createAnthropicAdapter(baseConfig());
-      await expect(adapter.call({ messages: [] })).rejects.toBeInstanceOf(
-        InvalidRequestError,
-      );
+      await expect(adapter.call({ messages: [] })).rejects.toBeInstanceOf(InvalidRequestError);
     });
 
     it('C-GL-18 | 2 system messages → throws InvalidRequestError', async () => {
@@ -292,9 +288,7 @@ describe('global contract', () => {
       // to the binding. Here we only assert we don't throw InvalidRequestError
       // preemptively; a downstream provider-error outcome is acceptable.
       const fetchImpl = createMockFetch(scenario.ok('anthropic', 'ok'));
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       try {
         await adapter.call({
           messages: [
@@ -312,9 +306,7 @@ describe('global contract', () => {
       const fetchImpl = createScenarioFetch([
         { status: 200, body: '', headers: { 'content-type': 'application/json' } },
       ]);
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await expect(adapter.call(REQUEST)).rejects.toBeInstanceOf(ResponseParseError);
     });
 
@@ -326,9 +318,7 @@ describe('global contract', () => {
           headers: { 'content-type': 'text/html' },
         },
       ]);
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await expect(adapter.call(REQUEST)).rejects.toBeInstanceOf(ResponseParseError);
     });
   });

@@ -39,9 +39,7 @@ describe('temporal contracts', () => {
   describe('§23.1 distinct clocks', () => {
     it('C-TM-01 | response.durationMs is a number ≥ 0', async () => {
       const fetchImpl = createMockFetch(scenario.ok('anthropic', 'ok'));
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       const res = await adapter.call(REQUEST);
       expect(typeof res.durationMs).toBe('number');
       expect(res.durationMs).toBeGreaterThanOrEqual(0);
@@ -49,9 +47,7 @@ describe('temporal contracts', () => {
 
     it('C-TM-02 | response.startedAt and endedAt are valid ISO 8601 strings', async () => {
       const fetchImpl = createMockFetch(scenario.ok('anthropic', 'ok'));
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       const res = await adapter.call(REQUEST);
       expect(res.startedAt).toMatch(ISO_REGEX);
       expect(res.endedAt).toMatch(ISO_REGEX);

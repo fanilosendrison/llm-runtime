@@ -38,14 +38,16 @@
         "useConst": "error",
         "useImportType": "error",
         "useNodejsImportProtocol": "error",
-        "noParameterAssign": "error"
+        "noParameterAssign": "off",
+        "noNonNullAssertion": "off"
       },
       "suspicious": {
         "noExplicitAny": "error",
         "noConsole": "error"
       },
       "complexity": {
-        "noForEach": "off"
+        "noForEach": "off",
+        "useLiteralKeys": "off"
       }
     }
   },

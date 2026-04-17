@@ -9,10 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AbortedError, TransientProviderError } from '../../src/errors/index.js';
 import { createOpenAIEmbeddingAdapter } from '../../src/factories/openai-embeddings.js';
-import type {
-  LLMEmbeddingBatchEvent,
-  LLMEmbeddingEndEvent,
-} from '../../src/types.js';
+import type { LLMEmbeddingBatchEvent, LLMEmbeddingEndEvent } from '../../src/types.js';
 import { eventAssertions } from '../helpers/event-assertions.js';
 import { scenario } from '../helpers/fetch-scenario.js';
 import {
@@ -115,13 +112,9 @@ describe('executeEmbedding — (§20)', () => {
         'llm_embedding_batch',
         'llm_embedding_end',
       ]);
-      const batchEvent = logger.find('llm_embedding_batch') as
-        | LLMEmbeddingBatchEvent
-        | undefined;
+      const batchEvent = logger.find('llm_embedding_batch') as LLMEmbeddingBatchEvent | undefined;
       expect(batchEvent?.batchIndex).toBe(0);
-      const endEvent = logger.find('llm_embedding_end') as
-        | LLMEmbeddingEndEvent
-        | undefined;
+      const endEvent = logger.find('llm_embedding_end') as LLMEmbeddingEndEvent | undefined;
       expect(endEvent?.success).toBe(true);
     });
 
@@ -167,10 +160,7 @@ describe('executeEmbedding — (§20)', () => {
       const { logger, adapter } = setup();
       await adapter.embed([]);
 
-      eventAssertions.sequenceMatches(logger.events, [
-        'llm_embedding_start',
-        'llm_embedding_end',
-      ]);
+      eventAssertions.sequenceMatches(logger.events, ['llm_embedding_start', 'llm_embedding_end']);
     });
   });
 
@@ -355,9 +345,7 @@ describe('executeEmbedding — (§20)', () => {
       const { logger, adapter } = setup();
       await runToFailure(adapter);
 
-      const endEvent = logger.find('llm_embedding_end') as
-        | LLMEmbeddingEndEvent
-        | undefined;
+      const endEvent = logger.find('llm_embedding_end') as LLMEmbeddingEndEvent | undefined;
       expect(endEvent?.success).toBe(false);
       expect(endEvent?.errorKind).toBe('transient_provider');
     });
@@ -389,13 +377,19 @@ describe('executeEmbedding — (§20)', () => {
   describe('§20.6 abort pendant embedding', () => {
     it('T-EE-22 | throws AbortedError when signal aborts during 2nd batch', async () => {
       vi.useFakeTimers();
-      const batch0 = [[0, 1, 2], [3, 4, 5]];
+      const batch0 = [
+        [0, 1, 2],
+        [3, 4, 5],
+      ];
       // Batch 1: response delayed long enough that the abort fires first.
       const responses: MockResponse[] = [
         { status: 200, body: embeddingsBody(batch0) },
         {
           status: 200,
-          body: embeddingsBody([[6, 7, 8], [9, 10, 11]]),
+          body: embeddingsBody([
+            [6, 7, 8],
+            [9, 10, 11],
+          ]),
           delayMs: 10_000,
         },
       ];
@@ -423,12 +417,18 @@ describe('executeEmbedding — (§20)', () => {
 
     it('T-EE-23 | completed batches still emit their llm_embedding_batch events', async () => {
       vi.useFakeTimers();
-      const batch0 = [[0, 1, 2], [3, 4, 5]];
+      const batch0 = [
+        [0, 1, 2],
+        [3, 4, 5],
+      ];
       const responses: MockResponse[] = [
         { status: 200, body: embeddingsBody(batch0) },
         {
           status: 200,
-          body: embeddingsBody([[6, 7, 8], [9, 10, 11]]),
+          body: embeddingsBody([
+            [6, 7, 8],
+            [9, 10, 11],
+          ]),
           delayMs: 10_000,
         },
       ];
@@ -442,16 +442,12 @@ describe('executeEmbedding — (§20)', () => {
         logging: { logger },
       });
       const controlled = createControlledSignal();
-      const promise = adapter
-        .embed(['a', 'b', 'c', 'd'], controlled.signal)
-        .catch(() => undefined);
+      const promise = adapter.embed(['a', 'b', 'c', 'd'], controlled.signal).catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(15_000);
       await promise;
 
-      const batchEvents = logger.findAll(
-        'llm_embedding_batch',
-      ) as LLMEmbeddingBatchEvent[];
+      const batchEvents = logger.findAll('llm_embedding_batch') as LLMEmbeddingBatchEvent[];
       // At least batch 0 should have been emitted (completed before abort).
       expect(batchEvents.length).toBeGreaterThanOrEqual(1);
       expect(batchEvents[0]?.batchIndex).toBe(0);
@@ -464,7 +460,10 @@ describe('executeEmbedding — (§20)', () => {
       logger: ReturnType<typeof createMockLogger>;
       adapter: ReturnType<typeof createOpenAIEmbeddingAdapter>;
     } {
-      const vecs = [[0, 1, 2], [3, 4, 5]];
+      const vecs = [
+        [0, 1, 2],
+        [3, 4, 5],
+      ];
       const fetchMock = createScenarioFetch([
         scenario.serverError(),
         { status: 200, body: embeddingsBody(vecs) },

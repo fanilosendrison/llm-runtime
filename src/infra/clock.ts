@@ -1,4 +1,5 @@
-// NIB-M-INFRA-UTILS — clock. Stubs only.
+// NIB-M-INFRA-UTILS §3.1 — two-clock abstraction.
+// Sole production access point for wall + monotone time (C-IU1).
 
 export interface Clock {
   nowWall(): Date;
@@ -7,13 +8,7 @@ export interface Clock {
 }
 
 export const defaultClock: Clock = {
-  nowWall: (): Date => {
-    throw new Error('Not implemented');
-  },
-  nowWallIso: (): string => {
-    throw new Error('Not implemented');
-  },
-  nowMono: (): number => {
-    throw new Error('Not implemented');
-  },
+  nowWall: (): Date => new Date(),
+  nowWallIso: (): string => new Date().toISOString(),
+  nowMono: (): number => performance.now(),
 };

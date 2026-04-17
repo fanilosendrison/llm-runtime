@@ -7,10 +7,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  ProviderProtocolError,
-  SilentTruncationError,
-} from '../../src/errors/index.js';
+import { ProviderProtocolError, SilentTruncationError } from '../../src/errors/index.js';
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import { createOpenAIAdapter } from '../../src/factories/openai.js';
 import type { LLMCallUnknownTerminationEvent } from '../../src/types.js';
@@ -127,11 +124,13 @@ describe('executeCall — integrity (§19)', () => {
     it('T-EC-123 | throws SilentTruncationError with attempts=1', async () => {
       const adapter = setup();
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(SilentTruncationError);
       expect((caught as SilentTruncationError).attempts).toBe(1);
@@ -152,9 +151,11 @@ describe('executeCall — integrity (§19)', () => {
         },
         logging: { logger: createMockLogger() },
       });
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       expect(fetchMock.calls).toHaveLength(1);
     });
@@ -162,9 +163,7 @@ describe('executeCall — integrity (§19)', () => {
 
   // ───────────────────────── §19.3 explicit max_tokens ─────────────────────────
   describe('§19.3 truncation explicite max_tokens', () => {
-    function setup(
-      failOnSilentTruncation: boolean,
-    ): ReturnType<typeof createAnthropicAdapter> {
+    function setup(failOnSilentTruncation: boolean): ReturnType<typeof createAnthropicAdapter> {
       const fetchMock = createMockFetch({
         status: 200,
         body: anthropicBody('partial output', 'max_tokens'),
@@ -289,11 +288,13 @@ describe('executeCall — integrity (§19)', () => {
     it('T-EC-132 | throws ProviderProtocolError, attempts=1', async () => {
       const { adapter } = setup();
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(ProviderProtocolError);
       expect((caught as ProviderProtocolError).attempts).toBe(1);
@@ -301,9 +302,11 @@ describe('executeCall — integrity (§19)', () => {
 
     it('T-EC-133 | llm_call_unknown_termination emitted before throw', async () => {
       const { logger, adapter } = setup();
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch(() => undefined);
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch(() => undefined);
 
       expect(logger.find('llm_call_unknown_termination')).toBeDefined();
     });
@@ -407,11 +410,13 @@ describe('executeCall — integrity (§19)', () => {
         logging: { logger: createMockLogger() },
       });
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(ProviderProtocolError);
     });
@@ -444,11 +449,13 @@ describe('executeCall — integrity (§19)', () => {
         logging: { logger: createMockLogger() },
       });
       let caught: unknown;
-      await adapter.call({
-        messages: [{ role: 'user', content: 'Hi' }],
-      }).catch((err: unknown) => {
-        caught = err;
-      });
+      await adapter
+        .call({
+          messages: [{ role: 'user', content: 'Hi' }],
+        })
+        .catch((err: unknown) => {
+          caught = err;
+        });
 
       expect(caught).toBeInstanceOf(ProviderProtocolError);
     });
@@ -485,9 +492,7 @@ describe('executeCall — integrity (§19)', () => {
 
   // ───────────────────────── §19.9 providerModel absent ─────────────────────────
   describe('§19.9 providerModel absent', () => {
-    function setup(
-      failOnModelMismatch: boolean,
-    ): ReturnType<typeof createOpenAIAdapter> {
+    function setup(failOnModelMismatch: boolean): ReturnType<typeof createOpenAIAdapter> {
       // OpenAI body without a `model` field.
       const fetchMock = createMockFetch({
         status: 200,

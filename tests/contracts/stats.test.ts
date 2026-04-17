@@ -34,9 +34,7 @@ function baseConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfig {
   };
 }
 
-function baseEmbConfig(
-  overrides: Partial<EmbeddingAdapterConfig> = {},
-): EmbeddingAdapterConfig {
+function baseEmbConfig(overrides: Partial<EmbeddingAdapterConfig> = {}): EmbeddingAdapterConfig {
   return {
     model: 'text-embedding-3-small',
     apiKey: 'sk-test',
@@ -76,9 +74,7 @@ describe('stats contracts', () => {
         body: okBody('hi', 10, 20),
         headers: {},
       });
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await adapter.call(REQUEST);
       expect(adapter.stats.totalCalls).toBe(1);
       expect(adapter.stats.totalInputTokens).toBe(10);
@@ -88,9 +84,7 @@ describe('stats contracts', () => {
 
     it('C-ST-03 | 1 fatal failure (401) → no increment', async () => {
       const fetchImpl = createScenarioFetch([scenario.authError()]);
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await adapter.call(REQUEST).catch(() => undefined);
       expect(adapter.stats.totalCalls).toBe(0);
       expect(adapter.stats.totalInputTokens).toBe(0);
@@ -119,9 +113,7 @@ describe('stats contracts', () => {
         scenario.authError(),
         { status: 200, body: okBody('b', 7, 14), headers: {} },
       ]);
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await adapter.call(REQUEST).catch(() => undefined);
       await adapter.call(REQUEST).catch(() => undefined);
       await adapter.call(REQUEST).catch(() => undefined);
@@ -146,9 +138,7 @@ describe('stats contracts', () => {
         },
         headers: {},
       });
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await adapter.call(REQUEST);
       expect(adapter.stats.totalInputTokens).toBe(0);
       expect(Number.isFinite(adapter.stats.totalInputTokens)).toBe(true);
@@ -168,9 +158,7 @@ describe('stats contracts', () => {
         },
         headers: {},
       });
-      const adapter = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl } }),
-      );
+      const adapter = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl } }));
       await adapter.call(REQUEST);
       expect(adapter.stats.totalInputTokens).toBe(10);
       expect(adapter.stats.totalOutputTokens).toBe(0);
@@ -199,12 +187,8 @@ describe('stats contracts', () => {
         body: okBody('b', 7, 11),
         headers: {},
       });
-      const a1 = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl1 } }),
-      );
-      const a2 = createAnthropicAdapter(
-        baseConfig({ providerOptions: { fetch: fetchImpl2 } }),
-      );
+      const a1 = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl1 } }));
+      const a2 = createAnthropicAdapter(baseConfig({ providerOptions: { fetch: fetchImpl2 } }));
       await a1.call(REQUEST);
       expect(a1.stats.totalCalls).toBe(1);
       expect(a2.stats.totalCalls).toBe(0);

@@ -9,22 +9,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import { createGoogleAdapter } from '../../src/factories/google.js';
-import { createOpenAICompatibleAdapter } from '../../src/factories/openai-compatible.js';
 import { createOpenAIAdapter } from '../../src/factories/openai.js';
-import type {
-  LLMCallEndEvent,
-  LLMCallSanitizedEvent,
-  LLMRequest,
-} from '../../src/types.js';
+import { createOpenAICompatibleAdapter } from '../../src/factories/openai-compatible.js';
+import type { LLMCallEndEvent, LLMCallSanitizedEvent, LLMRequest } from '../../src/types.js';
 import { deepFreeze } from '../helpers/deep-freeze.js';
 import { eventAssertions } from '../helpers/event-assertions.js';
 import { scenario } from '../helpers/fetch-scenario.js';
 import { loadJsonFixture } from '../helpers/fixture-loader.js';
-import {
-  createMockFetch,
-  createScenarioFetch,
-  type MockResponse,
-} from '../helpers/mock-fetch.js';
+import { createMockFetch, createScenarioFetch, type MockResponse } from '../helpers/mock-fetch.js';
 import { createMockLogger } from '../helpers/mock-logger.js';
 
 const ULID_REGEX = /^[0-9A-HJKMNP-TV-Z]{26}$/;
@@ -113,9 +105,7 @@ describe('executeCall — happy path (§15)', () => {
 
       expect(response.startedAt).toMatch(ISO_REGEX);
       expect(response.endedAt).toMatch(ISO_REGEX);
-      expect(Date.parse(response.endedAt)).toBeGreaterThanOrEqual(
-        Date.parse(response.startedAt),
-      );
+      expect(Date.parse(response.endedAt)).toBeGreaterThanOrEqual(Date.parse(response.startedAt));
     });
   });
 
@@ -186,9 +176,7 @@ describe('executeCall — happy path (§15)', () => {
       const { logger, adapter, request } = setup();
       await adapter.call(request);
 
-      const sanitized = logger.find('llm_call_sanitized') as
-        | LLMCallSanitizedEvent
-        | undefined;
+      const sanitized = logger.find('llm_call_sanitized') as LLMCallSanitizedEvent | undefined;
       expect(sanitized).toBeDefined();
       expect(sanitized?.jsonFenceRemoved).toBe(true);
       expect(sanitized?.thinkingTagsRemoved).toBe(false);
@@ -272,9 +260,7 @@ describe('executeCall — happy path (§15)', () => {
         type: 'message',
         role: 'assistant',
         model: 'claude-opus-4-6-20260301',
-        content: [
-          { type: 'text', text: '<think>only thinking</think>' },
-        ],
+        content: [{ type: 'text', text: '<think>only thinking</think>' }],
         stop_reason: 'end_turn',
         stop_sequence: null,
         usage: { input_tokens: 10, output_tokens: 4 },
@@ -319,9 +305,7 @@ describe('executeCall — happy path (§15)', () => {
       const { logger, adapter, request } = setup();
       await adapter.call(request);
 
-      const sanitized = logger.find('llm_call_sanitized') as
-        | LLMCallSanitizedEvent
-        | undefined;
+      const sanitized = logger.find('llm_call_sanitized') as LLMCallSanitizedEvent | undefined;
       expect(sanitized).toBeDefined();
       expect(sanitized?.rawContentPreview).toBeDefined();
     });

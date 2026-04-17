@@ -1,10 +1,15 @@
-// NIB-M-FACTORIES — buildSimplePrompt helper. Stub only.
+// NIB-M-FACTORIES §5.4 — ergonomic helper. No semantic decision.
 
 import type { LLMMessage } from '../types.js';
 
 export function buildSimplePrompt(
-  _systemPrompt: string | undefined,
-  _userPrompt: string,
+  systemPrompt: string | undefined,
+  userPrompt: string,
 ): readonly LLMMessage[] {
-  throw new Error('Not implemented');
+  const messages: LLMMessage[] = [];
+  if (systemPrompt !== undefined && systemPrompt.length > 0) {
+    messages.push({ role: 'system', content: systemPrompt });
+  }
+  messages.push({ role: 'user', content: userPrompt });
+  return messages;
 }
