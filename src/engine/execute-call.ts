@@ -37,7 +37,8 @@ import type {
   ProviderLongId,
   TerminationReason,
 } from '../types.js';
-import { runFetch } from './_internal/fetch-utils.js';
+import { enrichError } from './_internal/enrich-error.js';
+import { normalizeHeaders, runFetch } from './_internal/fetch-utils.js';
 
 export interface ExecuteCallContext {
   readonly binding: ProviderBinding;
@@ -62,38 +63,12 @@ const DEFAULT_RETRY = { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_00
 const DEFAULT_TIMEOUT_MS = 120_000;
 const PREVIEW_MAX = 500;
 
+// Signal that is never aborted. Used as fallback when no external signal is
+// provided, avoiding a fresh AbortController allocation per sleep call.
+const NEVER_ABORTING_SIGNAL: AbortSignal = new AbortController().signal;
+
 function isAborted(s: AbortSignal | undefined): boolean {
   return s?.aborted === true;
-}
-
-function enrichError(
-  err: LLMRuntimeError,
-  ctx: { callId: string; provider: ProviderLongId; model: string; attempts: number },
-): LLMRuntimeError {
-  // Reconstruct with engine-known context overwriting binding-provided fields.
-  const Ctor = err.constructor as new (init: Record<string, unknown>) => LLMRuntimeError;
-  const init: Record<string, unknown> = {
-    message: err.message,
-    callId: ctx.callId,
-    provider: ctx.provider,
-    model: ctx.model,
-    attempts: ctx.attempts,
-  };
-  if (err.cause !== undefined) init['cause'] = err.cause;
-  // Preserve subclass-specific fields.
-  const preserved = [
-    'retryAfterMs',
-    'status',
-    'networkErrorKind',
-    'timeoutMs',
-    'truncationMode',
-    'reason',
-  ] as const;
-  for (const key of preserved) {
-    const v = (err as unknown as Record<string, unknown>)[key];
-    if (v !== undefined) init[key] = v;
-  }
-  return new Ctor(init);
 }
 
 function resolveSanitization(
@@ -172,7 +147,7 @@ export async function executeCall(
   logger.emit({
     ...baseEvent('llm_call_start'),
     endpoint: bindingRequestUrl,
-    messagesCount: request.messages.length,
+    messagesCount: Array.isArray(request.messages) ? request.messages.length : 0,
   } as never);
 
   function emitEnd(
@@ -259,7 +234,7 @@ export async function executeCall(
       } as never);
       // Abortable sleep on external signal only; no per-attempt timeout for sleep.
       if (retryDecision.delayMs > 0) {
-        const sleepSignal = externalSignal ?? new AbortController().signal;
+        const sleepSignal = externalSignal ?? NEVER_ABORTING_SIGNAL;
         try {
           await abortableSleep(retryDecision.delayMs, sleepSignal);
         } catch (sleepErr) {
@@ -292,7 +267,7 @@ export async function executeCall(
           snapshotState: snapshot?.state ?? 'unknown',
           estimatedTokens,
         } as never);
-        const sleepSignal = externalSignal ?? new AbortController().signal;
+        const sleepSignal = externalSignal ?? NEVER_ABORTING_SIGNAL;
         try {
           await abortableSleep(throttleDecision.waitMs, sleepSignal);
         } catch (sleepErr) {
@@ -410,10 +385,7 @@ export async function executeCall(
 
     // response is defined here.
     const res = response!;
-    const headers: Record<string, string> = {};
-    res.headers.forEach((value, key) => {
-      headers[key.toLowerCase()] = value;
-    });
+    const headers = normalizeHeaders(res.headers);
     lastHeaders = headers;
 
     if (!res.ok) {

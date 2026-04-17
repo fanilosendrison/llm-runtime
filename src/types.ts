@@ -130,7 +130,7 @@ export interface LLMLogger {
   emit(event: LLMEvent): void;
 }
 
-// ───────────────────────── Events (14 types, closed union) ─────────────────────────
+// ───────────────────────── Events (15 types, closed union) ─────────────────────────
 
 export type LLMEvent =
   | LLMCallStartEvent
@@ -146,6 +146,7 @@ export type LLMEvent =
   | LLMCallEndEvent
   | LLMEmbeddingStartEvent
   | LLMEmbeddingBatchEvent
+  | LLMEmbeddingRetryScheduledEvent
   | LLMEmbeddingEndEvent;
 
 interface BaseEvent {
@@ -246,6 +247,15 @@ export interface LLMEmbeddingBatchEvent extends BaseEvent {
   readonly durationMs: number;
 }
 
+export interface LLMEmbeddingRetryScheduledEvent extends BaseEvent {
+  readonly eventType: 'llm_embedding_retry_scheduled';
+  readonly batchIndex: number;
+  readonly attempt: number;
+  readonly delayMs: number;
+  readonly reason: string;
+  readonly errorKind: LLMErrorKind;
+}
+
 export interface LLMEmbeddingEndEvent extends BaseEvent {
   readonly eventType: 'llm_embedding_end';
   readonly success: boolean;
@@ -299,8 +309,6 @@ export interface EmbeddingAdapter {
   embed(texts: readonly string[], signal?: AbortSignal): Promise<number[][]>;
 }
 
-// ───────────────────────── Error kinds (re-exported for convenience) ─────────────────────────
-
+// LLMErrorKind used by event types above. Re-export removed — index.ts exports
+// it directly from services/error-kind.js.
 import type { LLMErrorKind } from './services/error-kind.js';
-
-export type { LLMErrorKind };

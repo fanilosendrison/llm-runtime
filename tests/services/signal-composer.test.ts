@@ -21,8 +21,10 @@ describe('signal-composer', () => {
       expect(composed.signal.aborted).toEqual(false);
       vi.advanceTimersByTime(100);
       expect(composed.signal.aborted).toEqual(true);
-      // reason indicates timeout (shape may be Error, DOMException, or string — verify truthy).
-      expect(composed.signal.reason).toBeDefined();
+      // reason must be a TimeoutAbortReason indicating timeout.
+      const reason = composed.signal.reason;
+      expect(reason).toBeDefined();
+      expect(String(reason)).toMatch(/timeout/i);
       composed.cleanup();
     });
 
@@ -109,14 +111,22 @@ describe('signal-composer', () => {
       composed.cleanup();
     });
 
-    it('T-SC-09 | timeout expires 1ms before external → reason = timeout (not external)', async () => {
+    it('T-SC-09 | timeout expires before external abort → reason = timeout (not external)', async () => {
       const ctrl = createControlledSignal();
       const composed = composeSignal(ctrl.signal, 100);
+      // Let timeout fire first.
       vi.advanceTimersByTime(100);
       await Promise.resolve();
       expect(composed.signal.aborted).toEqual(true);
-      // reason must NOT be the external reason (which was never set).
-      expect(composed.signal.reason).not.toEqual(ctrl.signal.reason);
+      const timeoutReason = composed.signal.reason;
+      expect(timeoutReason).toBeDefined();
+      // Now abort the external signal AFTER timeout already fired.
+      const externalReason = new Error('external-late');
+      ctrl.abort(externalReason);
+      await Promise.resolve();
+      // Composed reason must remain the timeout reason, not the late external.
+      expect(composed.signal.reason).toBe(timeoutReason);
+      expect(composed.signal.reason).not.toBe(externalReason);
       composed.cleanup();
     });
   });

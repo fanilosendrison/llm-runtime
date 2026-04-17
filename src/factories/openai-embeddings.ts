@@ -7,8 +7,10 @@ import { defaultClock } from '../infra/clock.js';
 import { resolveLogger } from '../infra/logger.js';
 import { createStats, readOnlyView } from '../infra/stats.js';
 import type { EmbeddingAdapter, EmbeddingAdapterConfig } from '../types.js';
+import { validateEmbeddingAdapterConfig } from './validate-config.js';
 
 export function createOpenAIEmbeddingAdapter(config: EmbeddingAdapterConfig): EmbeddingAdapter {
+  validateEmbeddingAdapterConfig(config);
   const { logging, ...cloneable } = config;
   const frozenConfig: EmbeddingAdapterConfig = {
     ...structuredClone(cloneable),

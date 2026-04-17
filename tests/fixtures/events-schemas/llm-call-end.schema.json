@@ -34,7 +34,14 @@
     "durationMs": { "type": "integer", "minimum": 0 },
     "attemptCount": { "type": "integer", "minimum": 0 },
     "termination": { "type": "string" },
-    "usage": { "type": "object" },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "inputTokens": { "type": "integer", "minimum": 0 },
+        "outputTokens": { "type": "integer", "minimum": 0 },
+        "totalTokens": { "type": "integer", "minimum": 0 }
+      }
+    },
     "providerModel": { "type": "string" },
     "errorKind": { "type": "string" }
   }

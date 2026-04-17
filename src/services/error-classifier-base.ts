@@ -5,6 +5,7 @@ import {
   AuthError,
   InvalidRequestError,
   type LLMRuntimeError,
+  type NetworkErrorKind,
   OverloadedError,
   ProviderProtocolError,
   RateLimitError,
@@ -13,7 +14,7 @@ import {
 } from '../errors/index.js';
 import { parseRetryAfter } from './retry-resolver.js';
 
-export type NetworkErrorKind = 'dns' | 'connection' | 'reset' | 'unknown';
+export type { NetworkErrorKind };
 
 export interface ProviderErrorSignal {
   readonly aborted: boolean;
@@ -63,6 +64,8 @@ function classifyByStatus(status: number, signal: ProviderErrorSignal): LLMRunti
     });
   }
   // 5xx + all unmapped (e.g. 418, 504) → transient provider.
+  // Retry-After on 5xx is handled by the engine's retry resolver (resolveRetryDecision
+  // reads headers directly), not by the classifier.
   return new TransientProviderError({
     message: buildMessage(`HTTP ${status}`, signal.bodyText),
     status,

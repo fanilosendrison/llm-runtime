@@ -97,6 +97,9 @@ describe('global contract', () => {
       for (const k of expected) {
         expect(mod[k], `missing export "${k}"`).toBeDefined();
       }
+      // Bijective check: no extra unexpected exports.
+      const extras = Object.keys(mod).filter((k) => !expected.includes(k));
+      expect(extras, 'unexpected extra exports found').toEqual([]);
     });
 
     it('C-GL-02 | module does NOT export internals', async () => {

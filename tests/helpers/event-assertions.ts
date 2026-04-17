@@ -8,11 +8,11 @@ import type { LLMEvent } from '../../src/types.js';
 export const eventAssertions = {
   sequenceMatches(events: LLMEvent[], expectedTypes: string[]): void {
     const actual = events.map((e) => e.eventType);
-    expect(actual.join(',')).toBe(expectedTypes.join(','));
+    expect(actual).toEqual(expectedTypes);
   },
 
   allSameCallId(events: LLMEvent[]): void {
-    if (events.length === 0) return;
+    expect(events.length).toBeGreaterThan(0);
     const first = events[0];
     if (first === undefined) return;
     const expectedCallId = first.callId;

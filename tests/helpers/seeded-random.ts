@@ -55,6 +55,7 @@ export function seededRandom(seed: number): SeededRandom {
     const out: LLMMessage[] = [];
     for (let i = 0; i < count; i += 1) {
       const roleIdx = Math.floor(next() * ROLES.length);
+      // Fallback unreachable at runtime; satisfies TS strict indexing.
       const role = ROLES[roleIdx] ?? 'user';
       out.push({
         role,

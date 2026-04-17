@@ -97,7 +97,7 @@ describe('executeCall — integrity (§19)', () => {
       const adapter = setup();
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
   });
 
@@ -211,7 +211,7 @@ describe('executeCall — integrity (§19)', () => {
       const adapter = setup(true);
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
   });
 
@@ -260,7 +260,7 @@ describe('executeCall — integrity (§19)', () => {
       const { adapter } = setup();
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
   });
 
@@ -300,7 +300,7 @@ describe('executeCall — integrity (§19)', () => {
       expect((caught as ProviderProtocolError).attempts).toBe(1);
     });
 
-    it('T-EC-133 | llm_call_unknown_termination emitted before throw', async () => {
+    it('T-EC-133 | llm_call_unknown_termination emitted before llm_call_end', async () => {
       const { logger, adapter } = setup();
       await adapter
         .call({
@@ -309,6 +309,13 @@ describe('executeCall — integrity (§19)', () => {
         .catch(() => undefined);
 
       expect(logger.find('llm_call_unknown_termination')).toBeDefined();
+      // Verify event ordering: unknown_termination must appear before call_end.
+      const types = logger.events.map((e: { eventType: string }) => e.eventType);
+      const unknownIdx = types.indexOf('llm_call_unknown_termination');
+      const endIdx = types.indexOf('llm_call_end');
+      expect(unknownIdx).toBeGreaterThanOrEqual(0);
+      expect(endIdx).toBeGreaterThanOrEqual(0);
+      expect(unknownIdx).toBeLessThan(endIdx);
     });
   });
 
@@ -365,7 +372,7 @@ describe('executeCall — integrity (§19)', () => {
       });
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
   });
 
@@ -394,7 +401,7 @@ describe('executeCall — integrity (§19)', () => {
       });
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
 
     it('T-EC-137 | OpenAI (mayRouteModel=false) with mismatch → throws ProviderProtocolError', async () => {
@@ -486,7 +493,7 @@ describe('executeCall — integrity (§19)', () => {
       });
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
   });
 
@@ -532,7 +539,7 @@ describe('executeCall — integrity (§19)', () => {
       const adapter = setup(true);
       await expect(
         adapter.call({ messages: [{ role: 'user', content: 'Hi' }] }),
-      ).resolves.toBeDefined();
+      ).resolves.toMatchObject({ termination: expect.any(String) });
     });
   });
 });

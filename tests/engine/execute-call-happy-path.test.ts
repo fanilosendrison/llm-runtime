@@ -496,9 +496,12 @@ describe('executeCall — happy path (§15)', () => {
 
   // ───────────────────────── §15.9 Properties ─────────────────────────
   describe('§15.9 properties', () => {
-    it('P-EC-a | deterministic binding + fixed fetch → same response.content across runs', async () => {
-      // Shared fixture returned each time; same request, separate adapters.
-      const runOnce = async (): Promise<{ content: string; provider: string; model: string }> => {
+    it('P-EC-a | deterministic binding + fixed fetch → same response across 3 runs per request variant', async () => {
+      // Use multiple request contents to avoid tautology with a single constant fixture.
+      const contents = ['Hello', 'Tell me a joke', 'What is 2+2?', 'Summarize this'];
+      const runOnce = async (
+        userContent: string,
+      ): Promise<{ content: string; provider: string; model: string }> => {
         const mockFetch = createMockFetch(scenario.okFixture('anthropic/ok-simple'));
         vi.stubGlobal('fetch', mockFetch);
         const adapter = createAnthropicAdapter({
@@ -507,7 +510,7 @@ describe('executeCall — happy path (§15)', () => {
           logging: { logger: createMockLogger() },
         });
         const req = deepFreeze<LLMRequest>({
-          messages: [{ role: 'user', content: 'Hello' }],
+          messages: [{ role: 'user', content: userContent }],
         });
         const response = await adapter.call(req);
         vi.unstubAllGlobals();
@@ -517,12 +520,13 @@ describe('executeCall — happy path (§15)', () => {
           model: response.model,
         };
       };
-      const a = await runOnce();
-      const b = await runOnce();
-      const c = await runOnce();
-
-      expect(a).toEqual(b);
-      expect(b).toEqual(c);
+      for (const userContent of contents) {
+        const a = await runOnce(userContent);
+        const b = await runOnce(userContent);
+        const c = await runOnce(userContent);
+        expect(a).toEqual(b);
+        expect(b).toEqual(c);
+      }
     });
 
     it('P-EC-b | response.callId unique across 100 consecutive calls (ULID + strictly increasing clock)', async () => {

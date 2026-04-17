@@ -177,6 +177,7 @@ describe('parse-retry-after', () => {
           expect(typeof result).toEqual('number');
           expect(Number.isNaN(result)).toEqual(false);
           expect(Number.isFinite(result)).toEqual(true);
+          expect(result).toBeGreaterThanOrEqual(0);
         }
       }
     });

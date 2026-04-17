@@ -5,7 +5,14 @@ import { describe, expect, it } from 'vitest';
 
 import { googleBinding } from '../../src/bindings/google.js';
 import type { BindingConfig } from '../../src/bindings/types.js';
-import { ContentFilterError, ResponseParseError } from '../../src/errors/index.js';
+import {
+  AuthError,
+  ContentFilterError,
+  InvalidRequestError,
+  RateLimitError,
+  ResponseParseError,
+  TransientProviderError,
+} from '../../src/errors/index.js';
 import type { LLMRequest } from '../../src/types.js';
 import { loadJsonFixture } from '../helpers/fixture-loader.js';
 import { createMockClock } from '../helpers/mock-clock.js';
@@ -206,6 +213,52 @@ describe('googleBinding', () => {
   });
 
   // ─── §13.5 — readRateLimitHeaders ──────────────────────────────────────
+
+  describe('§13.4 classifyError', () => {
+    it('T-GG-classify-400 | 400 → InvalidRequestError', () => {
+      const err = googleBinding.classifyError({
+        aborted: false,
+        timeout: false,
+        headers: {},
+        status: 400,
+        bodyText: 'bad request',
+      });
+      expect(err).toBeInstanceOf(InvalidRequestError);
+    });
+
+    it('T-GG-classify-401 | 401 → AuthError', () => {
+      const err = googleBinding.classifyError({
+        aborted: false,
+        timeout: false,
+        headers: {},
+        status: 401,
+        bodyText: 'unauthorized',
+      });
+      expect(err).toBeInstanceOf(AuthError);
+    });
+
+    it('T-GG-classify-429 | 429 → RateLimitError', () => {
+      const err = googleBinding.classifyError({
+        aborted: false,
+        timeout: false,
+        headers: {},
+        status: 429,
+        bodyText: 'rate limited',
+      });
+      expect(err).toBeInstanceOf(RateLimitError);
+    });
+
+    it('T-GG-classify-500 | 500 → TransientProviderError', () => {
+      const err = googleBinding.classifyError({
+        aborted: false,
+        timeout: false,
+        headers: {},
+        status: 500,
+        bodyText: 'server error',
+      });
+      expect(err).toBeInstanceOf(TransientProviderError);
+    });
+  });
 
   describe('§13.5 readRateLimitHeaders', () => {
     it('T-GG-25 | any headers return null (Gemini exposes no rate-limit headers)', () => {

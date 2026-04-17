@@ -5,8 +5,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { MockResponse } from './mock-fetch.js';
-
 // Anchor relative paths to tests/fixtures/ (this file lives at tests/helpers/).
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_ROOT = resolve(HERE, '..', 'fixtures');
@@ -18,8 +16,4 @@ export function loadFixture(relativePath: string): string {
 
 export function loadJsonFixture<T = unknown>(relativePath: string): T {
   return JSON.parse(loadFixture(relativePath)) as T;
-}
-
-export function loadScenario(name: string): MockResponse[] {
-  return loadJsonFixture<MockResponse[]>(`scenarios/${name}.json`);
 }

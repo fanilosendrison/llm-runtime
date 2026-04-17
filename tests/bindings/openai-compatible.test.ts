@@ -191,5 +191,23 @@ describe('createOpenAICompatibleBinding', () => {
       expect(b.quirks.defaultSanitization.stripThinkingTags).toBe(true);
       expect(b.quirks.defaultSanitization.stripJsonFence).toBe(false);
     });
+
+    it('T-OC-10/16 distinctness | ollama is the only provider with hasRateLimitHeaders=false', () => {
+      const providers = ['deepseek', 'mistral', 'groq', 'together', 'ollama'] as const;
+      const bindings = providers.map((p) => ({
+        provider: p,
+        binding: createOpenAICompatibleBinding(p),
+      }));
+      const withRateLimit = bindings.filter((b) => b.binding.quirks.hasRateLimitHeaders);
+      const withoutRateLimit = bindings.filter((b) => !b.binding.quirks.hasRateLimitHeaders);
+      // deepseek, mistral, groq, together have rate-limit headers; ollama does not.
+      expect(withRateLimit.map((b) => b.provider)).toEqual([
+        'deepseek',
+        'mistral',
+        'groq',
+        'together',
+      ]);
+      expect(withoutRateLimit.map((b) => b.provider)).toEqual(['ollama']);
+    });
   });
 });

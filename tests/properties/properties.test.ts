@@ -8,7 +8,7 @@
 // logger, §25.8 enabled false, §25.9 isolation, §25.10 headers lowercase,
 // §25.11 réponse vide ≠ truncation, §25.12 detectHeuristicTruncation stable.
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { anthropicBinding } from '../../src/bindings/anthropic.js';
 import { googleBinding } from '../../src/bindings/google.js';
@@ -633,38 +633,33 @@ describe('property tests', () => {
 
   describe('§25.10 post-fetch headers lowercase', () => {
     it('P-28 | binding.parseResponse / readRateLimitHeaders / classifyError receive lowercase header keys (spy)', async () => {
-      // Wrap the Anthropic binding to spy on the headers passed to parseResponse.
+      // Use vi.spyOn for auto-restore instead of direct mutation (safe if binding is frozen).
       const seenParseHeaders: Array<Record<string, string>> = [];
-      const originalParse = anthropicBinding.parseResponse;
-      (anthropicBinding as { parseResponse: ProviderBinding['parseResponse'] }).parseResponse = (
-        body,
-        headers,
-      ) => {
-        seenParseHeaders.push({ ...headers });
-        return originalParse(body, headers);
-      };
-      try {
-        const fetchImpl = createMockFetch({
-          status: 200,
-          body: {
-            id: 'msg_1',
-            type: 'message',
-            role: 'assistant',
-            model: 'claude-test',
-            content: [{ type: 'text', text: 'hi' }],
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 1, output_tokens: 1 },
-          },
-          headers: { 'X-Mixed-Case': 'value', 'Another-Header': 'v2' },
+      const parseSpy = vi
+        .spyOn(anthropicBinding, 'parseResponse')
+        .mockImplementation((body: unknown, headers: Record<string, string>) => {
+          seenParseHeaders.push({ ...headers });
+          parseSpy.mockRestore();
+          return anthropicBinding.parseResponse(body, headers);
         });
-        const adapter = createAnthropicAdapter(
-          baseAdapterConfig({ providerOptions: { fetch: fetchImpl } }),
-        );
-        await adapter.call({ messages: [{ role: 'user', content: 'hi' }] }).catch(() => undefined);
-      } finally {
-        (anthropicBinding as { parseResponse: ProviderBinding['parseResponse'] }).parseResponse =
-          originalParse;
-      }
+      const fetchImpl = createMockFetch({
+        status: 200,
+        body: {
+          id: 'msg_1',
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-test',
+          content: [{ type: 'text', text: 'hi' }],
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 1, output_tokens: 1 },
+        },
+        headers: { 'X-Mixed-Case': 'value', 'Another-Header': 'v2' },
+      });
+      const adapter = createAnthropicAdapter(
+        baseAdapterConfig({ providerOptions: { fetch: fetchImpl } }),
+      );
+      await adapter.call({ messages: [{ role: 'user', content: 'hi' }] }).catch(() => undefined);
+      parseSpy.mockRestore();
       for (const hdrs of seenParseHeaders) {
         for (const k of Object.keys(hdrs)) {
           expect(k).toBe(k.toLowerCase());

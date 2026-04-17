@@ -3,7 +3,7 @@
 import type { LLMRuntimeError } from '../errors/index.js';
 import type { ProviderErrorSignal } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
-import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
+import type { LLMRequest, LLMUsage, ProviderLongId, TerminationReason } from '../types.js';
 
 // ───────────────────────── Canonical intermediate shapes ─────────────────────────
 
@@ -50,6 +50,7 @@ export interface EmbeddingQuirks {
 // ───────────────────────── Binding interfaces ─────────────────────────
 
 export interface ProviderBinding {
+  readonly provider: ProviderLongId;
   readonly buildRequest: (request: LLMRequest, config: BindingConfig) => CanonicalHttpRequest;
   readonly parseResponse: (
     body: unknown,

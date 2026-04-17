@@ -314,8 +314,9 @@ describe('retry-resolver', () => {
           ? { 'retry-after': String(rng.randomInt(0, 30)) }
           : {};
 
-        const a: RetryDecision = resolveRetryDecision(makeErr(), attempt, headers, policy);
-        const b: RetryDecision = resolveRetryDecision(makeErr(), attempt, headers, policy);
+        const err = makeErr();
+        const a: RetryDecision = resolveRetryDecision(err, attempt, headers, policy);
+        const b: RetryDecision = resolveRetryDecision(err, attempt, headers, policy);
         expect(a).toEqual(b);
       }
     });

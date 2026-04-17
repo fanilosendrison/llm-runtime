@@ -19,7 +19,8 @@ import {
   isTimeoutAbortReason,
 } from '../services/signal-composer.js';
 import type { EmbeddingAdapterConfig, LLMLogger, ProviderLongId } from '../types.js';
-import { runFetch } from './_internal/fetch-utils.js';
+import { enrichError } from './_internal/enrich-error.js';
+import { normalizeHeaders, runFetch } from './_internal/fetch-utils.js';
 
 export interface ExecuteEmbeddingContext {
   readonly binding: EmbeddingBinding;
@@ -39,27 +40,6 @@ export interface ExecuteEmbeddingStatsDelta {
 const DEFAULT_RETRY = { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 } as const;
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_BATCH_SIZE = 100;
-
-function enrichError(
-  err: LLMRuntimeError,
-  ctx: { callId: string; provider: ProviderLongId; model: string; attempts: number },
-): LLMRuntimeError {
-  const Ctor = err.constructor as new (init: Record<string, unknown>) => LLMRuntimeError;
-  const init: Record<string, unknown> = {
-    message: err.message,
-    callId: ctx.callId,
-    provider: ctx.provider,
-    model: ctx.model,
-    attempts: ctx.attempts,
-  };
-  if (err.cause !== undefined) init['cause'] = err.cause;
-  const preserved = ['retryAfterMs', 'status', 'networkErrorKind', 'timeoutMs'] as const;
-  for (const key of preserved) {
-    const v = (err as unknown as Record<string, unknown>)[key];
-    if (v !== undefined) init[key] = v;
-  }
-  return new Ctor(init);
-}
 
 export async function executeEmbedding(
   texts: readonly string[],
@@ -154,7 +134,7 @@ export async function executeEmbedding(
           delayMs: decision.delayMs,
           reason: decision.reason,
           errorKind: lastError.kind,
-        } as never);
+        } as import('../types.js').LLMEmbeddingRetryScheduledEvent);
         if (decision.delayMs > 0) {
           const sleepSignal = externalSignal ?? new AbortController().signal;
           try {
@@ -247,10 +227,7 @@ export async function executeEmbedding(
       }
 
       const res = response!;
-      const headers: Record<string, string> = {};
-      res.headers.forEach((value, key) => {
-        headers[key.toLowerCase()] = value;
-      });
+      const headers = normalizeHeaders(res.headers);
       lastHeaders = headers;
 
       if (!res.ok) {

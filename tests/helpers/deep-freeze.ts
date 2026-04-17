@@ -7,8 +7,8 @@ export function deepFreeze<T>(value: T): Readonly<T> {
   if (value === null || typeof value !== 'object') return value;
   if (Object.isFrozen(value)) return value as Readonly<T>;
   Object.freeze(value);
-  for (const key of Object.getOwnPropertyNames(value)) {
-    const child = (value as Record<string, unknown>)[key];
+  for (const key of Reflect.ownKeys(value)) {
+    const child = (value as Record<string | symbol, unknown>)[key];
     if (child !== null && typeof child === 'object' && !Object.isFrozen(child)) {
       deepFreeze(child);
     }

@@ -15,6 +15,7 @@ import {
 } from '../../src/errors/index.js';
 import type { ProviderErrorSignal } from '../../src/services/error-classifier-base.js';
 import type { LLMRequest } from '../../src/types.js';
+import { deepFreeze } from '../helpers/deep-freeze.js';
 import { loadJsonFixture } from '../helpers/fixture-loader.js';
 import { createMockClock } from '../helpers/mock-clock.js';
 import { seededRandom } from '../helpers/seeded-random.js';
@@ -369,15 +370,13 @@ describe('anthropicBinding', () => {
       }
     });
 
-    it('P-AN-b | buildRequest does not mutate frozen inputs — 20 iterations', () => {
+    it('P-AN-b | buildRequest does not mutate deep-frozen inputs — 20 iterations', () => {
       const rng = seededRandom(0xa02);
       for (let i = 0; i < 20; i += 1) {
-        const request: LLMRequest = Object.freeze({
-          messages: Object.freeze([
-            Object.freeze({ role: 'user' as const, content: rng.randomString(32) }),
-          ]) as unknown as readonly { role: 'user'; content: string }[],
+        const request = deepFreeze<LLMRequest>({
+          messages: [{ role: 'user' as const, content: rng.randomString(32) }],
         });
-        const config = Object.freeze(baseConfig());
+        const config = deepFreeze(baseConfig());
         expect(() => anthropicBinding.buildRequest(request, config)).not.toThrow();
       }
     });

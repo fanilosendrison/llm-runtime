@@ -44,12 +44,20 @@ export const mockClockRegistry: MockClockRegistry = {
 };
 
 export function createMockClock(initialWall?: string, initialMono?: number): MockClock {
-  let wallMs: number = initialWall !== undefined ? new Date(initialWall).getTime() : 0;
+  const wallInit = initialWall !== undefined ? new Date(initialWall).getTime() : 0;
+  if (Number.isNaN(wallInit)) {
+    throw new Error(`createMockClock: invalid initialWall "${initialWall}" produces NaN`);
+  }
+  let wallMs: number = wallInit;
   let monoMs: number = initialMono ?? 0;
 
   const clock: MockClock = {
     setWall(isoOrDate: string | Date): void {
-      wallMs = isoOrDate instanceof Date ? isoOrDate.getTime() : new Date(isoOrDate).getTime();
+      const t = isoOrDate instanceof Date ? isoOrDate.getTime() : new Date(isoOrDate).getTime();
+      if (Number.isNaN(t)) {
+        throw new Error(`mockClock.setWall: invalid date "${String(isoOrDate)}" produces NaN`);
+      }
+      wallMs = t;
     },
     setMono(ms: number): void {
       monoMs = ms;

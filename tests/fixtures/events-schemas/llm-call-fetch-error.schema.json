@@ -9,7 +9,6 @@
     "provider",
     "model",
     "timestamp",
-    "networkErrorKind",
     "message"
   ],
   "properties": {

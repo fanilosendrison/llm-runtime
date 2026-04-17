@@ -1,16 +1,7 @@
 // NIB-M-BINDINGS-COMPLETION §6 — Google Gemini generateContent binding.
 
-import {
-  AuthError,
-  ContentFilterError,
-  InvalidRequestError,
-  type LLMRuntimeError,
-  RateLimitError,
-  ResponseParseError,
-  TransientProviderError,
-} from '../errors/index.js';
-import type { ProviderErrorSignal } from '../services/error-classifier-base.js';
-import { parseRetryAfter } from '../services/retry-resolver.js';
+import { ContentFilterError, type LLMRuntimeError, ResponseParseError } from '../errors/index.js';
+import { classifyErrorBase, type ProviderErrorSignal } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
 import type { CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
@@ -159,26 +150,8 @@ function parseResponse(body: unknown, _headers: Record<string, string>): ParsedP
 }
 
 function classifyError(signal: ProviderErrorSignal): LLMRuntimeError {
-  const bodyText = signal.bodyText ?? '';
-  if (signal.status === 429) {
-    const retryAfterMs = parseRetryAfter(signal.headers);
-    return new RateLimitError({
-      message: `google 429: ${bodyText || 'rate limited'}`,
-      ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
-    });
-  }
-  if (signal.status === 401 || signal.status === 403) {
-    return new AuthError({ message: `google ${signal.status}: ${bodyText || 'unauthorized'}` });
-  }
-  if (signal.status === 400 || signal.status === 404) {
-    return new InvalidRequestError({
-      message: `google ${signal.status}: ${bodyText || 'invalid'}`,
-    });
-  }
-  return new TransientProviderError({
-    message: `google ${signal.status ?? 'unknown'}: ${bodyText || 'transient'}`,
-    ...(signal.status !== undefined ? { status: signal.status } : {}),
-  });
+  // Google has no provider-specific status overrides beyond the base classifier.
+  return classifyErrorBase(signal);
 }
 
 function readRateLimitHeaders(
@@ -191,6 +164,7 @@ function readRateLimitHeaders(
 }
 
 export const googleBinding: ProviderBinding = {
+  provider: 'google',
   buildRequest,
   parseResponse,
   classifyError,

@@ -9,7 +9,8 @@ import {
   parseIntStr,
   parseOpenAILikeResponse,
   parseOpenAIResetDuration,
-} from './openai.js';
+  readOpenAILikeRateLimitHeaders,
+} from './_internal/openai-common.js';
 import type { OpenAICompatibleProvider, ProviderBinding, ProviderQuirks } from './types.js';
 
 const FALLBACK_RESET_MS = 60_000;
@@ -40,23 +41,6 @@ function quirksFor(provider: OpenAICompatibleProvider): ProviderQuirks {
     case 'ollama':
       return { hasRateLimitHeaders: false, mayRouteModel: false, defaultSanitization };
   }
-}
-
-function readGroqLikeHeaders(
-  headers: Record<string, string>,
-  nowMono: number,
-): RateLimitSnapshot | null {
-  const remaining = parseIntStr(headers['x-ratelimit-remaining-tokens']);
-  const resetStr = headers['x-ratelimit-reset-tokens'];
-  if (remaining === undefined || resetStr === undefined) return null;
-  const resetMs = parseOpenAIResetDuration(resetStr);
-  if (resetMs === undefined) return null;
-  return {
-    remainingTokens: remaining,
-    resetTokensAt: nowMono + resetMs,
-    lastCallOutputTokens: 0,
-    state: 'known',
-  };
 }
 
 function readMistralHeaders(
@@ -113,12 +97,13 @@ function readRateLimitHeadersFor(
 ): (headers: Record<string, string>, nowMono: number) => RateLimitSnapshot | null {
   switch (provider) {
     case 'deepseek':
+      return readOpenAILikeRateLimitHeaders;
     case 'ollama':
       return () => null;
     case 'mistral':
       return readMistralHeaders;
     case 'groq':
-      return readGroqLikeHeaders;
+      return readOpenAILikeRateLimitHeaders;
     case 'together':
       return readTogetherHeaders;
   }
@@ -128,6 +113,7 @@ export function createOpenAICompatibleBinding(provider: OpenAICompatibleProvider
   const readFn = readRateLimitHeadersFor(provider);
   const fallbackEndpoint = defaultEndpointFor(provider);
   return {
+    provider,
     buildRequest: (request, config) =>
       buildOpenAILikeRequest(config.endpoint ?? fallbackEndpoint, request, config),
     parseResponse: (body) => parseOpenAILikeResponse(body),

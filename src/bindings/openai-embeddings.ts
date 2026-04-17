@@ -1,7 +1,10 @@
 // NIB-M-BINDING-EMBEDDING — OpenAI Embeddings binding.
 
 import { ResponseParseError } from '../errors/index.js';
-import { classifyOpenAILikeError, parseIntStr, parseOpenAIResetDuration } from './openai.js';
+import {
+  classifyOpenAILikeError,
+  readOpenAILikeRateLimitHeaders,
+} from './_internal/openai-common.js';
 import type { CanonicalHttpRequest, EmbeddingBinding } from './types.js';
 
 const DEFAULT_ENDPOINT = 'https://api.openai.com/v1/embeddings';
@@ -52,6 +55,14 @@ function parseEmbeddings(body: unknown, _headers: Record<string, string>): numbe
     if (!Array.isArray(embedding)) {
       throw new ResponseParseError({ message: 'openai-embeddings: element missing embedding' });
     }
+    if (embedding.length === 0) {
+      throw new ResponseParseError({ message: 'openai-embeddings: empty embedding vector' });
+    }
+    if (typeof embedding[0] !== 'number') {
+      throw new ResponseParseError({
+        message: 'openai-embeddings: embedding elements must be numbers',
+      });
+    }
     const index = typeof entry['index'] === 'number' ? entry['index'] : indexed.length;
     indexed.push({ index, vector: embedding as number[] });
   }
@@ -63,19 +74,7 @@ export const openaiEmbeddingsBinding: EmbeddingBinding = {
   buildRequest,
   parseEmbeddings,
   classifyError: (signal) => classifyOpenAILikeError(signal, 'openai-embeddings'),
-  readRateLimitHeaders: (headers, nowMono) => {
-    const remaining = parseIntStr(headers['x-ratelimit-remaining-tokens']);
-    const resetStr = headers['x-ratelimit-reset-tokens'];
-    if (remaining === undefined || resetStr === undefined) return null;
-    const resetMs = parseOpenAIResetDuration(resetStr);
-    if (resetMs === undefined) return null;
-    return {
-      remainingTokens: remaining,
-      resetTokensAt: nowMono + resetMs,
-      lastCallOutputTokens: 0,
-      state: 'known',
-    };
-  },
+  readRateLimitHeaders: (headers, nowMono) => readOpenAILikeRateLimitHeaders(headers, nowMono),
   quirks: {
     hasRateLimitHeaders: true,
   },

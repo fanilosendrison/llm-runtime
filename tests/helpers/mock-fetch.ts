@@ -23,6 +23,7 @@ export interface MockFetchCall {
 
 export interface MockFetch {
   (input: FetchInput, init?: FetchInit): Promise<Response>;
+  // Mutable array: tests read via .calls, mock resets via .reset().
   calls: MockFetchCall[];
   reset(): void;
 }
@@ -49,7 +50,7 @@ function buildResponse(mock: MockResponse): Response {
   if (!headers.has('content-type')) {
     headers.set('content-type', 'application/json');
   }
-  const serialized = JSON.stringify(mock.body ?? null);
+  const serialized = typeof mock.body === 'string' ? mock.body : JSON.stringify(mock.body ?? null);
   return new Response(serialized, {
     status: mock.status,
     headers,

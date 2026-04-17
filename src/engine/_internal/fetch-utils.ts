@@ -2,6 +2,18 @@
 // Races the actual fetch against an abort promise to cover mocks that
 // do not honor the signal (NIB-T §27.6 mock-fetch).
 
+/**
+ * Normalize response headers to lowercase keys (I-13).
+ * Shared by execute-call and execute-embedding.
+ */
+export function normalizeHeaders(responseHeaders: Headers): Record<string, string> {
+  const headers: Record<string, string> = {};
+  responseHeaders.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
+  return headers;
+}
+
 export async function runFetch(
   fetchImpl: typeof fetch,
   url: string,

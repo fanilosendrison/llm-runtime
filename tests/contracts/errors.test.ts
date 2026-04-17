@@ -5,7 +5,7 @@
 // Mapping test → spec : §21.1 structure, §21.2 sérialisation, §21.3 enrichissement,
 // §21.4 cause, §21.5 champs spécifiques.
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   AbortedError,
@@ -30,7 +30,7 @@ import {
 import type { AdapterConfig, LLMRequest } from '../../src/types.js';
 import { scenario } from '../helpers/fetch-scenario.js';
 import { createScenarioFetch } from '../helpers/mock-fetch.js';
-import { createMockLogger } from '../helpers/mock-logger.js';
+
 import { createControlledSignal } from '../helpers/mock-signal.js';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -131,10 +131,22 @@ describe('errors contracts', () => {
   // ─── §21.2 Sérialisation ─────────────────────────────────────────────────
 
   describe('§21.2 serialization', () => {
-    it('C-ER-07 | JSON.stringify does not throw', () => {
+    it('C-ER-07 | JSON.stringify produces object with expected fields', () => {
       for (const { Ctor } of ALL_SUBCLASSES) {
         const instance = new Ctor({ message: 'something went wrong' });
-        expect(() => JSON.stringify(instance)).not.toThrow();
+        const json = JSON.stringify(instance);
+        expect(() => JSON.parse(json)).not.toThrow();
+        // At minimum, serialized output should preserve callId/provider/model if set.
+        const withContext = new Ctor({
+          message: 'test',
+          callId: 'TEST_CALL_ID',
+          provider: 'anthropic',
+          model: 'test-model',
+        });
+        const parsedCtx = JSON.parse(JSON.stringify(withContext)) as Record<string, unknown>;
+        expect(parsedCtx['callId']).toBe('TEST_CALL_ID');
+        expect(parsedCtx['provider']).toBe('anthropic');
+        expect(parsedCtx['model']).toBe('test-model');
       }
     });
 
@@ -228,6 +240,8 @@ describe('errors contracts', () => {
     });
 
     it('C-ER-14 | AbortedError (abort during retry sleep on attempt 2) has attempts === 2', async () => {
+      // Use fake timers to avoid CI flakiness from real-time scheduling.
+      vi.useFakeTimers();
       // 3 server errors so the engine retries. backoffBaseMs: 500 means:
       //   sleep after attempt 0 = 500ms, sleep after attempt 1 = 1000ms.
       // Abort at 600ms fires during the 1000ms sleep (starting at ~500ms),
@@ -248,13 +262,13 @@ describe('errors contracts', () => {
       // Abort fires during the retry sleep after attempt 1 (sleep = 1000ms,
       // starting at ~500ms mark). At that point attempt === 2 in the loop.
       ctrl.abortAfter(600, new Error('user cancel during sleep'));
-      try {
-        await adapter.call(SIMPLE_REQUEST, ctrl.signal);
-        throw new Error('expected throw');
-      } catch (e) {
-        expect(e).toBeInstanceOf(AbortedError);
-        expect((e as AbortedError).attempts).toBe(2);
-      }
+      const promise = adapter.call(SIMPLE_REQUEST, ctrl.signal).catch((e: unknown) => e);
+      // Advance past the abort time (600ms) to trigger the abort during retry sleep.
+      await vi.advanceTimersByTimeAsync(700);
+      const e = await promise;
+      expect(e).toBeInstanceOf(AbortedError);
+      expect((e as AbortedError).attempts).toBe(2);
+      vi.useRealTimers();
     });
 
     it('C-ER-15 | TimeoutError (4 timeouts of 100ms, maxAttempts 4) has attempts === 4, timeoutMs === 100', async () => {
@@ -352,7 +366,6 @@ describe('errors contracts', () => {
           providerOptions: { fetch: fetchImpl },
         }),
       );
-      const logger = createMockLogger();
       try {
         await adapter.call(SIMPLE_REQUEST);
         throw new Error('expected throw');
@@ -361,8 +374,6 @@ describe('errors contracts', () => {
         const err = e as RateLimitError;
         expect(err.retryAfterMs).toBe(3_000);
       }
-      // unused but keeps helper wired in
-      void logger;
     });
 
     it('C-ER-20 | TimeoutError has timeoutMs defined in ms', async () => {

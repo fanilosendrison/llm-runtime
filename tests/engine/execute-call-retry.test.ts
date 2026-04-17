@@ -365,6 +365,7 @@ describe('executeCall — retry (§16)', () => {
     }
 
     it('T-EC-46 | throws AuthError, error.attempts === 1', async () => {
+      vi.useFakeTimers();
       const { adapter } = setup();
       let caught: unknown;
       await adapter
@@ -380,6 +381,7 @@ describe('executeCall — retry (§16)', () => {
     });
 
     it('T-EC-47 | mockFetch.calls.length === 1 (no retry)', async () => {
+      vi.useFakeTimers();
       const { adapter, fetchMock } = setup();
       await adapter
         .call({
@@ -391,6 +393,7 @@ describe('executeCall — retry (§16)', () => {
     });
 
     it('T-EC-48 | retry_scheduled never emitted', async () => {
+      vi.useFakeTimers();
       const { logger, adapter } = setup();
       await adapter
         .call({
@@ -402,6 +405,7 @@ describe('executeCall — retry (§16)', () => {
     });
 
     it('T-EC-49 | llm_call_end success=false, errorKind=auth', async () => {
+      vi.useFakeTimers();
       const { logger, adapter } = setup();
       await adapter
         .call({

@@ -127,8 +127,7 @@ export const scenario = {
       status: 0,
       body: null,
       headers: {},
-      throwError: Object.assign(new Error(`Network error: ${kind}`), {
-        name: 'TypeError',
+      throwError: Object.assign(new TypeError(`Network error: ${kind}`), {
         code: kind,
       }),
     };

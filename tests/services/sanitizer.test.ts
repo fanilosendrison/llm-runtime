@@ -152,12 +152,12 @@ describe('sanitizer', () => {
       expect(stripJsonFence('')).toEqual({ content: '', removed: false });
     });
 
-    it('T-SN-17 | fenced but invalid JSON body → fence stripped (content behaviour calibrated in GREEN)', () => {
+    it('T-SN-17 | fenced but invalid JSON body → fence stripped, backticks removed', () => {
       // NIB-T §7.2 decision: fence is stripped regardless of JSON validity.
-      // NOTE: exact content may be refined in GREEN depending on ai-json-safe-parse behaviour.
       const input = '```json\n{invalid}\n```';
       const result = stripJsonFence(input);
       expect(result.removed).toEqual(true);
+      expect(result.content).not.toContain('```');
     });
 
     it('T-SN-17a | CRLF line endings in fenced block', () => {

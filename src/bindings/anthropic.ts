@@ -1,18 +1,10 @@
 // NIB-M-BINDINGS-COMPLETION §3 — Anthropic Messages API binding.
 
-import {
-  AuthError,
-  InvalidRequestError,
-  type LLMRuntimeError,
-  OverloadedError,
-  RateLimitError,
-  ResponseParseError,
-  TransientProviderError,
-} from '../errors/index.js';
-import type { ProviderErrorSignal } from '../services/error-classifier-base.js';
-import { parseRetryAfter } from '../services/retry-resolver.js';
+import { ResponseParseError } from '../errors/index.js';
+import { classifyErrorBase } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
+import { parseIntStr } from './_internal/openai-common.js';
 import type { CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
 
 const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
@@ -138,44 +130,16 @@ function parseResponse(body: unknown, _headers: Record<string, string>): ParsedP
   return out;
 }
 
-function classifyError(signal: ProviderErrorSignal): LLMRuntimeError {
-  const message = (signal.bodyText ?? '').length > 0 ? (signal.bodyText ?? '') : 'anthropic error';
-  if (signal.status === 529) {
-    const retryAfterMs = parseRetryAfter(signal.headers);
-    return new OverloadedError({
-      message: `anthropic 529: ${message}`,
-      ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
-    });
-  }
-  if (signal.status === 429) {
-    const retryAfterMs = parseRetryAfter(signal.headers);
-    return new RateLimitError({
-      message: `anthropic 429: ${message}`,
-      ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
-    });
-  }
-  if (signal.status === 401 || signal.status === 403) {
-    return new AuthError({ message: `anthropic ${signal.status}: ${message}` });
-  }
-  if (signal.status === 400 || signal.status === 404) {
-    return new InvalidRequestError({ message: `anthropic ${signal.status}: ${message}` });
-  }
-  return new TransientProviderError({
-    message: `anthropic ${signal.status ?? 'unknown'}: ${message}`,
-    ...(signal.status !== undefined ? { status: signal.status } : {}),
-  });
+function classifyError(signal: import('../services/error-classifier-base.js').ProviderErrorSignal) {
+  // Anthropic has no provider-specific status overrides beyond the base classifier.
+  // 529 (Overloaded) is handled by classifyErrorBase.
+  return classifyErrorBase(signal);
 }
 
 function parseIsoDate(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
   const ms = Date.parse(value);
   return Number.isNaN(ms) ? undefined : ms;
-}
-
-function parseIntHeader(value: string | undefined): number | undefined {
-  if (value === undefined) return undefined;
-  const n = Number.parseInt(value, 10);
-  return Number.isNaN(n) ? undefined : n;
 }
 
 function readRateLimitHeaders(
@@ -186,8 +150,8 @@ function readRateLimitHeaders(
   // NIB-M-BINDINGS-COMPLETION §3.5: read aggregate tokens bucket first,
   // fall back to input-tokens bucket for broader provider compatibility.
   const remaining =
-    parseIntHeader(headers['anthropic-ratelimit-tokens-remaining']) ??
-    parseIntHeader(headers['anthropic-ratelimit-input-tokens-remaining']);
+    parseIntStr(headers['anthropic-ratelimit-tokens-remaining']) ??
+    parseIntStr(headers['anthropic-ratelimit-input-tokens-remaining']);
   const resetWallMs =
     parseIsoDate(headers['anthropic-ratelimit-tokens-reset']) ??
     parseIsoDate(headers['anthropic-ratelimit-input-tokens-reset']);
@@ -203,6 +167,7 @@ function readRateLimitHeaders(
 }
 
 export const anthropicBinding: ProviderBinding = {
+  provider: 'anthropic',
   buildRequest,
   parseResponse,
   classifyError,
