@@ -116,6 +116,7 @@ describe('observability contracts', () => {
 
     it('C-OB-03 | llm_call_throttled conforms (waitMs, reason, snapshotState, estimatedTokens)', async () => {
       // Build a scenario where the second call hits a throttled snapshot from the first.
+      // Reset time is short (200ms) so the throttle sleep completes within test timeout.
       const fetchImpl = createScenarioFetch([
         {
           status: 200,
@@ -130,7 +131,7 @@ describe('observability contracts', () => {
           },
           headers: {
             'anthropic-ratelimit-tokens-remaining': '0',
-            'anthropic-ratelimit-tokens-reset': String(new Date(Date.now() + 60_000).toISOString()),
+            'anthropic-ratelimit-tokens-reset': new Date(Date.now() + 200).toISOString(),
           },
         },
         scenario.ok('anthropic', 'hello'),
@@ -271,8 +272,10 @@ describe('observability contracts', () => {
     });
 
     it('C-OB-09 | llm_call_unknown_error_classified conforms', async () => {
+      // Produce a fetch-level error with no classifiable network code.
+      // Engine emits llm_call_unknown_error_classified when classifyNetworkError returns undefined.
       const fetchImpl = createScenarioFetch([
-        { status: 418, body: { weird: 'teapot' }, headers: {} },
+        { status: 0, body: null, headers: {}, throwError: new Error('mysterious failure') },
       ]);
       const logger = createMockLogger();
       const adapter = createAnthropicAdapter(
@@ -754,7 +757,17 @@ describe('observability contracts', () => {
       'errorKind',
     ]);
 
-    it('C-OB-28 | llm_call_end has exactly the whitelisted fields (no silent extension)', async () => {
+    it('C-OB-28 | llm_call_end has exactly the whitelisted fields and all required fields', async () => {
+      const REQUIRED_FIELDS = [
+        'eventType',
+        'callId',
+        'provider',
+        'model',
+        'timestamp',
+        'success',
+        'durationMs',
+        'attemptCount',
+      ];
       const fetchImpl = createMockFetch(scenario.ok('anthropic', 'ok'));
       const logger = createMockLogger();
       const adapter = createAnthropicAdapter(
@@ -765,10 +778,16 @@ describe('observability contracts', () => {
       );
       await adapter.call(REQUEST).catch(() => undefined);
       const e = logger.find('llm_call_end');
+      expect(e).toBeDefined();
       if (e === undefined) return;
+      // No extra fields beyond whitelist.
       const keys = Object.keys(e);
       for (const k of keys) {
         expect(ALLOWED_FIELDS.has(k)).toBe(true);
+      }
+      // All required fields present.
+      for (const r of REQUIRED_FIELDS) {
+        expect(keys).toContain(r);
       }
     });
 

@@ -97,12 +97,12 @@ describe('sanitizer', () => {
       });
     });
 
-    it('T-SN-10d | case-sensitivity: <Think> and <THINK> are NOT stripped', () => {
-      // Tags are case-sensitive per spec — only lowercase <think> is recognized.
+    it('T-SN-10d | case-insensitive: <Think> and <THINK> ARE stripped (NIB-M-SANITIZER §3.3 flag i)', () => {
+      // NIB-M-SANITIZER §3.3: flag `i` — matche `<THINKING>` comme `<thinking>`.
       const input = '<Think>content</Think>';
-      expect(stripThinkingTags(input)).toEqual({ content: input, removed: false });
+      expect(stripThinkingTags(input)).toEqual({ content: '', removed: true });
       const inputUpper = '<THINK>content</THINK>';
-      expect(stripThinkingTags(inputUpper)).toEqual({ content: inputUpper, removed: false });
+      expect(stripThinkingTags(inputUpper)).toEqual({ content: '', removed: true });
     });
 
     it('T-SN-10e | surrogate pairs preserved outside think block', () => {

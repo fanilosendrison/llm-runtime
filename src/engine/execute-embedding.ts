@@ -4,7 +4,6 @@ import type { EmbeddingBinding } from '../bindings/types.js';
 import {
   AbortedError,
   LLMRuntimeError,
-  type NetworkErrorKind,
   ResponseParseError,
   TimeoutError,
   TransientProviderError,
@@ -12,6 +11,7 @@ import {
 import type { Clock } from '../infra/clock.js';
 import { classifyErrorBase, type ProviderErrorSignal } from '../services/error-classifier-base.js';
 import { isRetriableKind } from '../services/error-kind.js';
+import { classifyNetworkError } from '../services/network-error-classifier.js';
 import { resolveRetryDecision } from '../services/retry-resolver.js';
 import {
   abortableSleep,
@@ -19,6 +19,7 @@ import {
   isTimeoutAbortReason,
 } from '../services/signal-composer.js';
 import type { EmbeddingAdapterConfig, LLMLogger, ProviderLongId } from '../types.js';
+import { runFetch } from './_internal/fetch-utils.js';
 
 export interface ExecuteEmbeddingContext {
   readonly binding: EmbeddingBinding;
@@ -39,15 +40,6 @@ const DEFAULT_RETRY = { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_00
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_BATCH_SIZE = 100;
 
-function classifyNetworkError(err: unknown): NetworkErrorKind {
-  if (err === null || typeof err !== 'object') return 'unknown';
-  const code = (err as { code?: unknown }).code;
-  if (code === 'dns' || code === 'ENOTFOUND') return 'dns';
-  if (code === 'connection' || code === 'ECONNREFUSED') return 'connection';
-  if (code === 'reset' || code === 'ECONNRESET') return 'reset';
-  return 'unknown';
-}
-
 function enrichError(
   err: LLMRuntimeError,
   ctx: { callId: string; provider: ProviderLongId; model: string; attempts: number },
@@ -67,29 +59,6 @@ function enrichError(
     if (v !== undefined) init[key] = v;
   }
   return new Ctor(init);
-}
-
-async function runFetch(
-  fetchImpl: typeof fetch,
-  url: string,
-  headers: Record<string, string>,
-  body: unknown,
-  signal: AbortSignal,
-): Promise<Response> {
-  const init: RequestInit = {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    signal,
-  };
-  const abortPromise = new Promise<never>((_resolve, reject) => {
-    if (signal.aborted) {
-      reject(signal.reason);
-      return;
-    }
-    signal.addEventListener('abort', () => reject(signal.reason), { once: true });
-  });
-  return Promise.race([fetchImpl(url, init), abortPromise]);
 }
 
 export async function executeEmbedding(
@@ -177,8 +146,10 @@ export async function executeEmbedding(
           emitEnd(false, batchIndex, kind);
           throw enriched;
         }
+        // NIB-M-EXECUTE-EMBEDDING §3.5.5: embedding-specific event name.
         logger.emit({
-          ...baseEvent('llm_call_retry_scheduled'),
+          ...baseEvent('llm_embedding_retry_scheduled'),
+          batchIndex,
           attempt,
           delayMs: decision.delayMs,
           reason: decision.reason,
@@ -260,14 +231,14 @@ export async function executeEmbedding(
           aborted: false,
           timeout: false,
           headers: {},
-          networkErrorKind,
+          ...(networkErrorKind !== undefined ? { networkErrorKind } : {}),
           cause: fetchError,
         };
         lastError = classifyErrorBase(signal) as LLMRuntimeError;
         if (lastError.kind === 'provider_protocol') {
           lastError = new TransientProviderError({
             message: fetchError instanceof Error ? fetchError.message : String(fetchError),
-            networkErrorKind,
+            ...(networkErrorKind !== undefined ? { networkErrorKind } : {}),
             cause: fetchError,
           });
         }

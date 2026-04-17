@@ -5,7 +5,6 @@ import {
   AbortedError,
   InvalidRequestError,
   LLMRuntimeError,
-  type NetworkErrorKind,
   ProviderProtocolError,
   ResponseParseError,
   SilentTruncationError,
@@ -15,6 +14,7 @@ import {
 import type { Clock } from '../infra/clock.js';
 import { classifyErrorBase, type ProviderErrorSignal } from '../services/error-classifier-base.js';
 import { isRetriableKind } from '../services/error-kind.js';
+import { classifyNetworkError } from '../services/network-error-classifier.js';
 import { resolveRetryDecision } from '../services/retry-resolver.js';
 import {
   detectHeuristicTruncation,
@@ -37,6 +37,7 @@ import type {
   ProviderLongId,
   TerminationReason,
 } from '../types.js';
+import { runFetch } from './_internal/fetch-utils.js';
 
 export interface ExecuteCallContext {
   readonly binding: ProviderBinding;
@@ -62,23 +63,7 @@ const DEFAULT_TIMEOUT_MS = 120_000;
 const PREVIEW_MAX = 500;
 
 function isAborted(s: AbortSignal | undefined): boolean {
-  return s !== undefined && s.aborted;
-}
-
-function classifyNetworkError(err: unknown): NetworkErrorKind | undefined {
-  if (err === null || typeof err !== 'object') return undefined;
-  const e = err as { code?: unknown; cause?: { code?: unknown } };
-  const raw =
-    typeof e.code === 'string'
-      ? e.code
-      : typeof e.cause?.code === 'string'
-        ? e.cause.code
-        : undefined;
-  if (raw === undefined) return undefined;
-  if (raw === 'dns' || raw === 'ENOTFOUND' || raw === 'EAI_AGAIN') return 'dns';
-  if (raw === 'connection' || raw === 'ECONNREFUSED') return 'connection';
-  if (raw === 'reset' || raw === 'ECONNRESET') return 'reset';
-  return 'unknown';
+  return s?.aborted === true;
 }
 
 function enrichError(
@@ -139,30 +124,6 @@ function validateRequest(request: LLMRequest): void {
 
 function clampPreview(raw: string): string {
   return raw.length > PREVIEW_MAX ? raw.slice(0, PREVIEW_MAX) : raw;
-}
-
-async function runFetch(
-  fetchImpl: typeof fetch,
-  canonicalUrl: string,
-  headers: Record<string, string>,
-  body: unknown,
-  signal: AbortSignal,
-): Promise<Response> {
-  const init: RequestInit = {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    signal,
-  };
-  // Race fetch with abort to cover mocks that do not honor the signal.
-  const abortPromise = new Promise<never>((_resolve, reject) => {
-    if (signal.aborted) {
-      reject(signal.reason);
-      return;
-    }
-    signal.addEventListener('abort', () => reject(signal.reason), { once: true });
-  });
-  return Promise.race([fetchImpl(canonicalUrl, init), abortPromise]);
 }
 
 export async function executeCall(

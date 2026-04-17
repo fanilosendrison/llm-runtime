@@ -10,12 +10,14 @@ export interface StripResult {
   readonly removed: boolean;
 }
 
-const THINKING_TAG_RE = /<think>[\s\S]*?<\/think>/g;
+// NIB-M-SANITIZER §3.3 + NIB-T §7.1: match both <thinking> (Anthropic) and
+// <think> (DeepSeek) tags. Case-insensitive, global, non-greedy.
+const THINKING_TAG_RE = /<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi;
 // Matches ```json\n<body>\n``` or ```\n<body>\n``` with anchors after trim (spec §3.4).
 const JSON_FENCE_RE = /^```(?:json)?\s*\r?\n?([\s\S]*?)\r?\n?\s*```$/;
 
 export function stripThinkingTags(content: string): StripResult {
-  const stripped = content.replace(THINKING_TAG_RE, '');
+  const stripped = content.replace(THINKING_TAG_RE, '').trim();
   return stripped === content ? { content, removed: false } : { content: stripped, removed: true };
 }
 

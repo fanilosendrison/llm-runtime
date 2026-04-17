@@ -501,16 +501,14 @@ describe('executeEmbedding — (§20)', () => {
       expect(result[1]).toEqual([3, 4, 5]);
     });
 
-    it('T-EE-26 | llm_call_retry_scheduled emitted (decision recorded for embedding retry)', async () => {
-      // NIB-T note: pattern reuse assumed; GREEN may rename. If the engine
-      // emits a distinct event name, this assertion will need to update.
+    it('T-EE-26 | llm_embedding_retry_scheduled emitted (NIB-M-EXECUTE-EMBEDDING §3.5.5)', async () => {
       vi.useFakeTimers();
       const { logger, adapter } = setup();
       const promise = adapter.embed(['a', 'b']);
       await vi.advanceTimersByTimeAsync(2000);
       await promise;
 
-      expect(logger.find('llm_call_retry_scheduled')).toBeDefined();
+      expect(logger.find('llm_embedding_retry_scheduled')).toBeDefined();
     });
   });
 

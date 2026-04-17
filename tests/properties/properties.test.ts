@@ -258,13 +258,18 @@ describe('property tests', () => {
       const adapter = createAnthropicAdapter(
         baseAdapterConfig({ providerOptions: { fetch: fetchImpl } }),
       );
-      // If the engine mutates the frozen request, this will throw with "Cannot assign to read only property".
-      // In RED the stub throws Not implemented first — the assertion is about "engine never mutates".
-      await expect(adapter.call(req)).rejects.toSatisfy((e: unknown) => {
-        // Reject must not be a TypeError from strict mode frozen mutation.
-        if (e instanceof TypeError && /read only/i.test(e.message)) return false;
-        return true;
-      });
+      // I-11: engine must never mutate the request. If it does, strict mode
+      // throws TypeError "Cannot assign to read only property" from deepFreeze.
+      // The call may resolve (success) or reject (non-mutation error) — both OK.
+      // Only a TypeError from frozen mutation is a failure.
+      try {
+        await adapter.call(req);
+      } catch (e: unknown) {
+        if (e instanceof TypeError && /read only/i.test(e.message)) {
+          expect.unreachable(`engine mutated frozen LLMRequest: ${e.message}`);
+        }
+        // Other errors (e.g. from stubs) are acceptable — engine did not mutate.
+      }
     });
 
     it('P-12 | 20 embed calls → texts remains structurally unchanged', async () => {
@@ -329,48 +334,60 @@ describe('property tests', () => {
 
   describe('§25.4 CanonicalHttpRequest shape (via binding.buildRequest)', () => {
     it('P-15 | canonicalRequest.method === "POST" for every binding over 20 requests', () => {
+      let successCount = 0;
       for (const { binding } of BINDINGS) {
         for (let seed = 1; seed <= 20; seed += 1) {
           const rng = seededRandom(seed);
           const req: LLMRequest = { messages: rng.randomMessages(rng.randomInt(1, 3)) };
           const res = safeCall(() => binding.buildRequest(req, baseBindingConfig()));
           if (!res.ok) continue;
+          successCount += 1;
           expect(res.value.method).toBe('POST');
         }
       }
+      expect(successCount).toBeGreaterThan(0);
     });
 
     it('P-16 | bodyKind === "json" (no "empty" for completions v1)', () => {
+      let successCount = 0;
       for (const { binding } of BINDINGS) {
         const req: LLMRequest = { messages: [{ role: 'user', content: 'hi' }] };
         const res = safeCall(() => binding.buildRequest(req, baseBindingConfig()));
         if (!res.ok) continue;
+        successCount += 1;
         expect(res.value.bodyKind).toBe('json');
       }
+      expect(successCount).toBeGreaterThan(0);
     });
 
     it('P-17 | bodyJson is always a JS object (never a pre-serialized string)', () => {
+      let successCount = 0;
       for (const { binding } of BINDINGS) {
         const req: LLMRequest = { messages: [{ role: 'user', content: 'hi' }] };
         const res = safeCall(() => binding.buildRequest(req, baseBindingConfig()));
         if (!res.ok) continue;
+        successCount += 1;
         expect(typeof res.value.bodyJson).toBe('object');
         expect(res.value.bodyJson).not.toBeNull();
         expect(Array.isArray(res.value.bodyJson)).toBe(false);
       }
+      expect(successCount).toBeGreaterThan(0);
     });
 
     it('P-18 | headers is Record<string,string> with non-empty string keys and string values', () => {
+      let successCount = 0;
       for (const { binding } of BINDINGS) {
         const req: LLMRequest = { messages: [{ role: 'user', content: 'hi' }] };
         const res = safeCall(() => binding.buildRequest(req, baseBindingConfig()));
         if (!res.ok) continue;
+        successCount += 1;
         for (const [k, v] of Object.entries(res.value.headers)) {
           expect(typeof k).toBe('string');
           expect(k.length).toBeGreaterThan(0);
           expect(typeof v).toBe('string');
         }
       }
+      expect(successCount).toBeGreaterThan(0);
     });
   });
 
@@ -537,10 +554,10 @@ describe('property tests', () => {
         }
       }
       const customTypes = customLogger.eventTypes();
-      // If both loggers produced something, sequences must match.
-      if (defaultTypes.length > 0 && customTypes.length > 0) {
-        expect(customTypes).toEqual(defaultTypes);
-      }
+      // Both loggers must have produced events (non-vacuous).
+      expect(defaultTypes.length).toBeGreaterThan(0);
+      expect(customTypes.length).toBeGreaterThan(0);
+      expect(customTypes).toEqual(defaultTypes);
     });
   });
 

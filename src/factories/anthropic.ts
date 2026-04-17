@@ -10,8 +10,6 @@ import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { AdapterConfig, LLMRequest, LLMResponse, ProviderAdapter } from '../types.js';
 
 export function createAnthropicAdapter(config: AdapterConfig): ProviderAdapter {
-  // Deep clone config to prevent caller mutation (I-8). Logging and providerOptions
-  // may contain non-cloneable values (functions), so they are shallow-copied.
   // Deep clone config to prevent caller mutation (I-8). Fields that may contain
   // non-cloneable values (functions) are shallow-copied instead.
   const { providerOptions, logging, integrity, ...cloneable } = config;

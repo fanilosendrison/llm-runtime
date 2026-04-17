@@ -183,8 +183,14 @@ function readRateLimitHeaders(
   nowMono: number,
   nowWall: Date,
 ): RateLimitSnapshot | null {
-  const remaining = parseIntHeader(headers['anthropic-ratelimit-input-tokens-remaining']);
-  const resetWallMs = parseIsoDate(headers['anthropic-ratelimit-input-tokens-reset']);
+  // NIB-M-BINDINGS-COMPLETION §3.5: read aggregate tokens bucket first,
+  // fall back to input-tokens bucket for broader provider compatibility.
+  const remaining =
+    parseIntHeader(headers['anthropic-ratelimit-tokens-remaining']) ??
+    parseIntHeader(headers['anthropic-ratelimit-input-tokens-remaining']);
+  const resetWallMs =
+    parseIsoDate(headers['anthropic-ratelimit-tokens-reset']) ??
+    parseIsoDate(headers['anthropic-ratelimit-input-tokens-reset']);
   if (remaining === undefined || resetWallMs === undefined) return null;
   const deltaMs = resetWallMs - nowWall.getTime();
   const resetMono = nowMono + Math.max(deltaMs, 0);

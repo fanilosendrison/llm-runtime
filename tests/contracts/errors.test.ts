@@ -228,7 +228,12 @@ describe('errors contracts', () => {
     });
 
     it('C-ER-14 | AbortedError (abort during retry sleep on attempt 2) has attempts === 2', async () => {
+      // 3 server errors so the engine retries. backoffBaseMs: 500 means:
+      //   sleep after attempt 0 = 500ms, sleep after attempt 1 = 1000ms.
+      // Abort at 600ms fires during the 1000ms sleep (starting at ~500ms),
+      // when attempt === 2 in the loop — i.e. 2 completed attempts.
       const fetchImpl = createScenarioFetch([
+        scenario.serverError(),
         scenario.serverError(),
         scenario.serverError(),
         scenario.ok('anthropic', 'ok'),
@@ -236,12 +241,13 @@ describe('errors contracts', () => {
       const ctrl = createControlledSignal();
       const adapter = createAnthropicAdapter(
         baseConfig({
-          retry: { maxAttempts: 5, backoffBaseMs: 1_000, maxBackoffMs: 5_000 },
+          retry: { maxAttempts: 5, backoffBaseMs: 500, maxBackoffMs: 5_000 },
           providerOptions: { fetch: fetchImpl },
         }),
       );
-      // Abort shortly after the first failures, during the retry sleep.
-      ctrl.abortAfter(50, new Error('user cancel during sleep'));
+      // Abort fires during the retry sleep after attempt 1 (sleep = 1000ms,
+      // starting at ~500ms mark). At that point attempt === 2 in the loop.
+      ctrl.abortAfter(600, new Error('user cancel during sleep'));
       try {
         await adapter.call(SIMPLE_REQUEST, ctrl.signal);
         throw new Error('expected throw');
