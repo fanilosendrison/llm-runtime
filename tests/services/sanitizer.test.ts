@@ -75,6 +75,43 @@ describe('sanitizer', () => {
     it('T-SN-10 | empty string', () => {
       expect(stripThinkingTags('')).toEqual({ content: '', removed: false });
     });
+
+    it('T-SN-10a | unicode emoji inside think block', () => {
+      expect(stripThinkingTags('<think>reasoning with emoji \u{1F914}</think>answer')).toEqual({
+        content: 'answer',
+        removed: true,
+      });
+    });
+
+    it('T-SN-10b | CRLF inside think block', () => {
+      expect(stripThinkingTags('<think>line1\r\nline2\r\n</think>answer')).toEqual({
+        content: 'answer',
+        removed: true,
+      });
+    });
+
+    it('T-SN-10c | mixed EOL (LF + CRLF) inside think block', () => {
+      expect(stripThinkingTags('<think>line1\nline2\r\nline3\n</think>result')).toEqual({
+        content: 'result',
+        removed: true,
+      });
+    });
+
+    it('T-SN-10d | case-sensitivity: <Think> and <THINK> are NOT stripped', () => {
+      // Tags are case-sensitive per spec — only lowercase <think> is recognized.
+      const input = '<Think>content</Think>';
+      expect(stripThinkingTags(input)).toEqual({ content: input, removed: false });
+      const inputUpper = '<THINK>content</THINK>';
+      expect(stripThinkingTags(inputUpper)).toEqual({ content: inputUpper, removed: false });
+    });
+
+    it('T-SN-10e | surrogate pairs preserved outside think block', () => {
+      const emoji = '\u{1F600}\u{1F4A9}';
+      expect(stripThinkingTags(`<think>hidden</think>${emoji}`)).toEqual({
+        content: emoji,
+        removed: true,
+      });
+    });
   });
 
   // ───────────────────────── §7.2 stripJsonFence ─────────────────────────
@@ -102,11 +139,13 @@ describe('sanitizer', () => {
       expect(stripJsonFence('hello')).toEqual({ content: 'hello', removed: false });
     });
 
-    it('T-SN-15 | preamble + fence + postamble → extracted', () => {
+    it('T-SN-15 | preamble + fence + postamble → NOT extracted (anchored per spec §3.4)', () => {
+      // Per spec §3.4, the fence must be the entire content (anchored regex).
+      // Preamble/postamble outside the fence prevents extraction.
       const input = 'preamble\n```json\n{"a": 1}\n```\npostamble';
       const result = stripJsonFence(input);
-      expect(result.removed).toEqual(true);
-      expect(result.content).toContain('{"a": 1}');
+      expect(result.removed).toEqual(false);
+      expect(result.content).toBe(input);
     });
 
     it('T-SN-16 | empty string → unchanged', () => {
@@ -119,6 +158,36 @@ describe('sanitizer', () => {
       const input = '```json\n{invalid}\n```';
       const result = stripJsonFence(input);
       expect(result.removed).toEqual(true);
+    });
+
+    it('T-SN-17a | CRLF line endings in fenced block', () => {
+      const input = '```json\r\n{"a": 1}\r\n```';
+      const result = stripJsonFence(input);
+      expect(result.removed).toEqual(true);
+      expect(result.content.trim()).toEqual('{"a": 1}');
+    });
+
+    it('T-SN-17b | mixed EOL (LF + CRLF) in fenced block', () => {
+      const input = '```json\n{"a": 1,\r\n"b": 2}\n```';
+      const result = stripJsonFence(input);
+      expect(result.removed).toEqual(true);
+      expect(result.content).toContain('"a": 1');
+      expect(result.content).toContain('"b": 2');
+    });
+
+    it('T-SN-17c | unicode emoji in fenced JSON body', () => {
+      const input = '```json\n{"emoji": "\u{1F914}"}\n```';
+      const result = stripJsonFence(input);
+      expect(result.removed).toEqual(true);
+      expect(result.content).toContain('\u{1F914}');
+    });
+
+    it('T-SN-17d | surrogate pair content preserved through fence stripping', () => {
+      const content = '{"text": "\u{1F600}\u{1F4A9}"}';
+      const input = `\`\`\`json\n${content}\n\`\`\``;
+      const result = stripJsonFence(input);
+      expect(result.removed).toEqual(true);
+      expect(result.content.trim()).toEqual(content);
     });
   });
 

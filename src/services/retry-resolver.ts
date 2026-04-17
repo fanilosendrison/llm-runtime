@@ -13,6 +13,7 @@ import {
   TimeoutError,
   TransientProviderError,
 } from '../errors/index.js';
+import { defaultClock } from '../infra/clock.js';
 import type { RetryPolicy } from '../types.js';
 
 export type RetryDecisionReason =
@@ -105,6 +106,6 @@ export function parseRetryAfter(headers: Record<string, string>): number | undef
   const parsed = new Date(raw);
   const ms = parsed.getTime();
   if (Number.isNaN(ms)) return undefined;
-  const delta = ms - Date.now();
+  const delta = ms - defaultClock.nowWall().getTime();
   return delta <= 0 ? 0 : delta;
 }

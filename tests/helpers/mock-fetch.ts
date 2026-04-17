@@ -56,15 +56,26 @@ function buildResponse(mock: MockResponse): Response {
   });
 }
 
-async function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
+async function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new DOMException('The operation was aborted.', 'AbortError'));
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    if (signal !== undefined) {
+      const onAbort = (): void => {
+        clearTimeout(timer);
+        reject(signal.reason ?? new DOMException('The operation was aborted.', 'AbortError'));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
   });
 }
 
-async function produce(mock: MockResponse): Promise<Response> {
+async function produce(mock: MockResponse, signal?: AbortSignal): Promise<Response> {
   if (mock.delayMs !== undefined && mock.delayMs > 0) {
-    await delay(mock.delayMs);
+    await delay(mock.delayMs, signal);
   }
   if (mock.throwError !== undefined) {
     throw mock.throwError;
@@ -95,7 +106,7 @@ export function createMockFetch(response: MockResponse | (() => MockResponse)): 
     };
     calls.push(call);
     const mockResponse = typeof response === 'function' ? response() : response;
-    return produce(mockResponse);
+    return produce(mockResponse, effectiveInit.signal ?? undefined);
   };
   return attachMockApi(impl, calls);
 }
@@ -118,7 +129,7 @@ export function createScenarioFetch(responses: MockResponse[]): MockFetch {
       );
     }
     index += 1;
-    return produce(current);
+    return produce(current, effectiveInit.signal ?? undefined);
   };
   return attachMockApi(impl, calls);
 }

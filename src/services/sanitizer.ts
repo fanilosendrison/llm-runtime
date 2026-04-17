@@ -11,18 +11,16 @@ export interface StripResult {
 }
 
 const THINKING_TAG_RE = /<think>[\s\S]*?<\/think>/g;
-// Matches ```<optional-lang>\n<body>\n``` anywhere in the string (non-greedy body).
-const JSON_FENCE_RE = /```(?:[a-zA-Z0-9_-]+)?\s*\r?\n?([\s\S]*?)\r?\n?\s*```/;
+// Matches ```json\n<body>\n``` or ```\n<body>\n``` with anchors after trim (spec §3.4).
+const JSON_FENCE_RE = /^```(?:json)?\s*\r?\n?([\s\S]*?)\r?\n?\s*```$/;
 
 export function stripThinkingTags(content: string): StripResult {
   const stripped = content.replace(THINKING_TAG_RE, '');
-  return stripped === content
-    ? { content, removed: false }
-    : { content: stripped, removed: true };
+  return stripped === content ? { content, removed: false } : { content: stripped, removed: true };
 }
 
 export function stripJsonFence(content: string): StripResult {
-  const match = JSON_FENCE_RE.exec(content);
+  const match = JSON_FENCE_RE.exec(content.trim());
   if (match === null || match[1] === undefined) {
     return { content, removed: false };
   }

@@ -4,7 +4,8 @@
 export interface ControlledSignal {
   readonly signal: AbortSignal;
   abort(reason?: unknown): void;
-  abortAfter(ms: number, reason?: unknown): void;
+  /** Schedule abort after `ms`. Returns a cancel handle to prevent timer leak. */
+  abortAfter(ms: number, reason?: unknown): { cancel(): void };
 }
 
 export function createControlledSignal(): ControlledSignal {
@@ -15,10 +16,15 @@ export function createControlledSignal(): ControlledSignal {
     abort(reason?: unknown): void {
       controller.abort(reason);
     },
-    abortAfter(ms: number, reason?: unknown): void {
-      setTimeout(() => {
+    abortAfter(ms: number, reason?: unknown): { cancel(): void } {
+      const timer = setTimeout(() => {
         controller.abort(reason);
       }, ms);
+      return {
+        cancel(): void {
+          clearTimeout(timer);
+        },
+      };
     },
   };
 }

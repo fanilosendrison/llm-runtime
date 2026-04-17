@@ -5,15 +5,29 @@
 // Mapping test → spec : §23.1 horloges distinctes, §23.2 résistance au clock jump,
 // §23.3 timeouts monotones.
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { TimeoutError } from '../../src/errors/index.js';
-import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
-import type { AdapterConfig, LLMRequest } from '../../src/types.js';
-import { scenario } from '../helpers/fetch-scenario.js';
-import { createMockClock } from '../helpers/mock-clock.js';
-import { createMockFetch, createScenarioFetch } from '../helpers/mock-fetch.js';
-import { createMockLogger } from '../helpers/mock-logger.js';
+import { mockClockRegistry } from '../helpers/mock-clock.js';
+
+// Wire mockClockRegistry into src/infra/clock.js so that the engine uses the
+// mock clock when mockClockRegistry.current is set (C-TM-04/05/06 requirement).
+vi.doMock('../../src/infra/clock.js', () => ({
+  defaultClock: {
+    nowWall: () => mockClockRegistry.current?.nowWall() ?? new Date(),
+    nowWallIso: () => mockClockRegistry.current?.nowWallIso() ?? new Date().toISOString(),
+    nowMono: () => mockClockRegistry.current?.nowMono() ?? performance.now(),
+  },
+}));
+
+const { TimeoutError } = await import('../../src/errors/index.js');
+const { createAnthropicAdapter } = await import('../../src/factories/anthropic.js');
+const { scenario } = await import('../helpers/fetch-scenario.js');
+const { createMockClock } = await import('../helpers/mock-clock.js');
+const { createMockFetch, createScenarioFetch } = await import('../helpers/mock-fetch.js');
+const { createMockLogger } = await import('../helpers/mock-logger.js');
+
+type AdapterConfig = import('../../src/types.js').AdapterConfig;
+type LLMRequest = import('../../src/types.js').LLMRequest;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -78,7 +92,9 @@ describe('temporal contracts', () => {
       const clock = createMockClock('2026-01-01T00:00:00.000Z', 0);
       clock.install();
       try {
-        const fetchImpl = createScenarioFetch([
+        // Wrap fetch to advance mock clocks *during* the fetch (simulating
+        // 500ms mono elapsed + wall jump back mid-call).
+        const innerFetch = createScenarioFetch([
           {
             status: 200,
             body: {
@@ -94,12 +110,15 @@ describe('temporal contracts', () => {
             delayMs: 0,
           },
         ]);
+        const clockAdvancingFetch: typeof globalThis.fetch = async (input, init) => {
+          // Simulate: mono advances 500ms, wall jumps back 10min mid-call.
+          clock.advanceMono(500);
+          clock.advanceWall(-600_000);
+          return innerFetch(input, init);
+        };
         const adapter = createAnthropicAdapter(
-          baseConfig({ providerOptions: { fetch: fetchImpl } }),
+          baseConfig({ providerOptions: { fetch: clockAdvancingFetch } }),
         );
-        // Simulate: wall jumps back 10 min mid-call, mono advances normally by 500ms.
-        clock.advanceMono(500);
-        clock.advanceWall(-600_000);
 
         const res = await adapter.call(REQUEST);
         expect(res.durationMs).toBeGreaterThan(0);
@@ -114,13 +133,16 @@ describe('temporal contracts', () => {
       const clock = createMockClock('2026-01-01T00:00:00.000Z', 0);
       clock.install();
       try {
-        const fetchImpl = createMockFetch(scenario.ok('anthropic', 'ok'));
+        // Wrap fetch to advance clocks during the fetch (wall jumps back mid-call).
+        const innerFetch = createMockFetch(scenario.ok('anthropic', 'ok'));
+        const clockAdvancingFetch: typeof globalThis.fetch = async (input, init) => {
+          clock.advanceMono(500);
+          clock.advanceWall(-600_000);
+          return innerFetch(input, init);
+        };
         const adapter = createAnthropicAdapter(
-          baseConfig({ providerOptions: { fetch: fetchImpl } }),
+          baseConfig({ providerOptions: { fetch: clockAdvancingFetch } }),
         );
-        // After start wall reads, jump back while mono advances.
-        clock.advanceMono(500);
-        clock.advanceWall(-600_000);
 
         const res = await adapter.call(REQUEST);
         // The spec accepts startedAt > endedAt; durationMs must still be coherent.

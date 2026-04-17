@@ -26,8 +26,13 @@ export interface MockClock {
   nowWall(): Date;
   nowWallIso(): string;
   nowMono(): number;
+  /** Register this clock in mockClockRegistry. If vi.doMock is not wired,
+   *  the engine will silently use the real defaultClock. Use assertWired()
+   *  after install to validate. */
   install(): void;
   uninstall(): void;
+  /** Returns true if mockClockRegistry.current === this clock. */
+  isInstalled(): boolean;
 }
 
 interface MockClockRegistry {
@@ -65,12 +70,21 @@ export function createMockClock(initialWall?: string, initialMono?: number): Moc
       return monoMs;
     },
     install(): void {
+      if (mockClockRegistry.current !== undefined && mockClockRegistry.current !== clock) {
+        throw new Error(
+          'mockClock.install(): another mock clock is already installed. ' +
+            'Call uninstall() on the previous clock first.',
+        );
+      }
       mockClockRegistry.current = clock;
     },
     uninstall(): void {
       if (mockClockRegistry.current === clock) {
         mockClockRegistry.current = undefined;
       }
+    },
+    isInstalled(): boolean {
+      return mockClockRegistry.current === clock;
     },
   };
 

@@ -113,6 +113,12 @@ describe('executeCall — retry (§16)', () => {
         'llm_call_attempt_start',
         'llm_call_end',
       ]);
+      // Verify attempt fields on attempt_start events.
+      const attemptStarts = logger.findAll('llm_call_attempt_start');
+      expect(attemptStarts.map((e) => (e as unknown as { attempt: number }).attempt)).toEqual([
+        0, 1,
+      ]);
+
       const providerErr = logger.find('llm_call_provider_error') as
         | LLMCallProviderErrorEvent
         | undefined;
@@ -305,12 +311,17 @@ describe('executeCall — retry (§16)', () => {
       expect(fetchMock.calls).toHaveLength(5);
     });
 
-    it('T-EC-43 | 4 retry_scheduled events emitted (between attempt 0→1..3→4)', async () => {
+    it('T-EC-43 | 4 retry_scheduled events emitted with attempt progression [1,2,3,4]', async () => {
       vi.useFakeTimers();
       const { logger, adapter } = setup();
       await runToExhaustion(adapter);
 
-      expect(logger.findAll('llm_call_retry_scheduled')).toHaveLength(4);
+      const retries = logger.findAll('llm_call_retry_scheduled');
+      expect(retries).toHaveLength(4);
+      // Verify attempt field progresses from 1 to 4 (retry after attempt N).
+      expect(retries.map((e) => (e as unknown as { attempt: number }).attempt)).toEqual([
+        1, 2, 3, 4,
+      ]);
     });
 
     it('T-EC-44 | llm_call_end success=false, errorKind=transient_provider, attemptCount=5', async () => {
@@ -616,12 +627,11 @@ describe('executeCall — retry (§16)', () => {
   // ───────────────────────── §16.8 429 invalide le snapshot throttle ─────────────────────────
   describe('§16.8 429 invalide le snapshot throttle', () => {
     it('T-EC-58 | after 429 without rate-limit headers, internal snapshot becomes "unknown"', async () => {
-      // Indirect observation via T-EC-59 below — the current test exercises
-      // the scenario, T-EC-59 asserts the observable consequence on the next
-      // call. We still assert the call succeeds on retry.
       vi.useFakeTimers();
       const fetchMock = createScenarioFetch([
         scenario.rateLimit(0),
+        scenario.okFixture('anthropic/ok-simple'),
+        // Third response for follow-up call to verify snapshot invalidation.
         scenario.okFixture('anthropic/ok-simple'),
       ]);
       vi.stubGlobal('fetch', fetchMock);
@@ -639,8 +649,15 @@ describe('executeCall — retry (§16)', () => {
       const response = await promise;
 
       expect(response.attemptCount).toBe(2);
-      // Proxy assertion: at this point snapshot state is "unknown" → verified
-      // via T-EC-59 behaviour on subsequent call.
+      // Verify snapshot invalidation: follow-up call should NOT emit
+      // llm_call_throttled because 429 without rate-limit headers
+      // invalidates the snapshot to "unknown".
+      const followupPromise = adapter.call({
+        messages: [{ role: 'user', content: 'followup' }],
+      });
+      await vi.advanceTimersByTimeAsync(2000);
+      await followupPromise.catch(() => undefined);
+      expect(logger.find('llm_call_throttled')).toBeUndefined();
     });
 
     it('T-EC-59 | next call does not emit llm_call_throttled (snapshot state unknown)', async () => {

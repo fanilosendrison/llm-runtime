@@ -21,47 +21,47 @@ describe('createOpenAICompatibleBinding', () => {
   // ─── §12.1 — provider identification (reflected in buildRequest URL) ───
 
   describe('§12.1 provider identification via buildRequest URL', () => {
-    it('T-OC-01 | deepseek factory uses deepseek endpoint', () => {
+    it('T-OC-01 | deepseek factory uses deepseek default endpoint', () => {
       const binding = createOpenAICompatibleBinding('deepseek');
       const http = binding.buildRequest(
         { messages: [{ role: 'user', content: 'hi' }] },
-        cfg({ model: 'deepseek-chat', endpoint: 'https://api.deepseek.com/v1' }),
+        cfg({ model: 'deepseek-chat' }),
       );
       expect(http.url).toContain('api.deepseek.com');
     });
 
-    it('T-OC-02 | mistral factory uses mistral endpoint', () => {
+    it('T-OC-02 | mistral factory uses mistral default endpoint', () => {
       const binding = createOpenAICompatibleBinding('mistral');
       const http = binding.buildRequest(
         { messages: [{ role: 'user', content: 'hi' }] },
-        cfg({ model: 'mistral-large', endpoint: 'https://api.mistral.ai/v1' }),
+        cfg({ model: 'mistral-large' }),
       );
       expect(http.url).toContain('api.mistral.ai');
     });
 
-    it('T-OC-03 | groq factory uses groq endpoint', () => {
+    it('T-OC-03 | groq factory uses groq default endpoint', () => {
       const binding = createOpenAICompatibleBinding('groq');
       const http = binding.buildRequest(
         { messages: [{ role: 'user', content: 'hi' }] },
-        cfg({ model: 'llama-3', endpoint: 'https://api.groq.com/openai/v1' }),
+        cfg({ model: 'llama-3' }),
       );
       expect(http.url).toContain('api.groq.com');
     });
 
-    it('T-OC-04 | together factory uses together endpoint', () => {
+    it('T-OC-04 | together factory uses together default endpoint', () => {
       const binding = createOpenAICompatibleBinding('together');
       const http = binding.buildRequest(
         { messages: [{ role: 'user', content: 'hi' }] },
-        cfg({ model: 'mixtral', endpoint: 'https://api.together.xyz/v1' }),
+        cfg({ model: 'mixtral' }),
       );
       expect(http.url).toContain('api.together.xyz');
     });
 
-    it('T-OC-05 | ollama factory uses localhost endpoint', () => {
+    it('T-OC-05 | ollama factory uses localhost default endpoint', () => {
       const binding = createOpenAICompatibleBinding('ollama');
       const http = binding.buildRequest(
         { messages: [{ role: 'user', content: 'hi' }] },
-        cfg({ model: 'llama3', endpoint: 'http://localhost:11434/v1' }),
+        cfg({ model: 'llama3' }),
       );
       expect(http.url).toContain('localhost:11434');
     });

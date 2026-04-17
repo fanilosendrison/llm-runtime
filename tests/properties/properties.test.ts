@@ -414,47 +414,67 @@ describe('property tests', () => {
   // ─── §25.6 Invariant du ProviderErrorSignal ───────────────────────────
 
   describe('§25.6 ProviderErrorSignal invariants', () => {
-    // NOTE: ProviderErrorSignal is internal (not exported). Full verification
-    // requires a classifier spy injected into the engine; here we check the
-    // structural invariants at the classifier boundary via classifyErrorBase.
+    // Tests verify real classifyErrorBase behavior, not synthesized signal structure.
 
-    it('P-22 | when the engine builds signals, headers keys are lowercase', () => {
-      // Direct assertion on synthesized signal: classifier must handle lowercase.
-      const signal: ProviderErrorSignal = {
-        aborted: false,
-        timeout: false,
-        headers: { 'retry-after': '10' },
-        status: 429,
-      };
-      for (const k of Object.keys(signal.headers)) {
-        expect(k).toBe(k.toLowerCase());
+    it('P-22 | classifyErrorBase with status 429 + retry-after header produces RateLimitError with retryAfterMs', () => {
+      // Verify that classifyErrorBase actually reads the retry-after header
+      // from the signal — proving the header key must be lowercase for parsing.
+      for (let seed = 1; seed <= 20; seed += 1) {
+        const rng = seededRandom(seed);
+        const retrySeconds = rng.randomInt(1, 60);
+        const signal: ProviderErrorSignal = {
+          aborted: false,
+          timeout: false,
+          headers: { 'retry-after': String(retrySeconds) },
+          status: 429,
+        };
+        const result = classifyErrorBase(signal);
+        expect(result.kind).toBe('rate_limit');
+        // retryAfterMs must be derived from the header, proving the header was read.
+        expect((result as { retryAfterMs?: number }).retryAfterMs).toBe(retrySeconds * 1000);
       }
     });
 
-    it('P-23 | aborted === true ⇒ timeout === false (engine priority)', () => {
-      // Structural invariant — enforced by the engine when assembling the signal.
-      // Here we just document that the invariant is testable via a synthesized pair.
-      const s: ProviderErrorSignal = {
+    it('P-23 | aborted === true takes precedence over timeout === true in classifyErrorBase', () => {
+      // When both aborted and timeout are true, classifier must return AbortedError (not TimeoutError).
+      // This tests the real priority logic in classifyErrorBase, not a tautological struct check.
+      const signal: ProviderErrorSignal = {
         aborted: true,
+        timeout: true,
+        headers: {},
+        status: 500,
+        networkErrorKind: 'unknown',
+      };
+      const result = classifyErrorBase(signal);
+      expect(result.kind).toBe('aborted');
+    });
+
+    it('P-24 | networkErrorKind maps to TransientProviderError with correct networkErrorKind field', () => {
+      const kinds: ReadonlyArray<'dns' | 'connection' | 'reset' | 'unknown'> = [
+        'dns',
+        'connection',
+        'reset',
+        'unknown',
+      ];
+      for (const nk of kinds) {
+        const signal: ProviderErrorSignal = {
+          aborted: false,
+          timeout: false,
+          headers: {},
+          networkErrorKind: nk,
+        };
+        const result = classifyErrorBase(signal);
+        expect(result.kind).toBe('transient_provider');
+        expect((result as { networkErrorKind?: string }).networkErrorKind).toBe(nk);
+      }
+      // Undefined networkErrorKind + no status => ProviderProtocolError (catch-all).
+      const fallback: ProviderErrorSignal = {
+        aborted: false,
         timeout: false,
         headers: {},
       };
-      if (s.aborted) expect(s.timeout).toBe(false);
-    });
-
-    it('P-24 | networkErrorKind ∈ {"dns","connection","reset","unknown"} ∪ {undefined}', () => {
-      const allowed = new Set(['dns', 'connection', 'reset', 'unknown']);
-      const candidates: Array<ProviderErrorSignal> = [
-        { aborted: false, timeout: false, headers: {}, networkErrorKind: 'dns' },
-        { aborted: false, timeout: false, headers: {}, networkErrorKind: 'connection' },
-        { aborted: false, timeout: false, headers: {}, networkErrorKind: 'reset' },
-        { aborted: false, timeout: false, headers: {}, networkErrorKind: 'unknown' },
-        { aborted: false, timeout: false, headers: {} },
-      ];
-      for (const s of candidates) {
-        if (s.networkErrorKind === undefined) continue;
-        expect(allowed.has(s.networkErrorKind)).toBe(true);
-      }
+      const fallbackResult = classifyErrorBase(fallback);
+      expect(fallbackResult.kind).toBe('provider_protocol');
     });
   });
 

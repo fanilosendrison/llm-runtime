@@ -273,6 +273,12 @@ describe('executeCall — throttle (§17)', () => {
       await promise;
 
       expect(logger.find('llm_call_throttled')).toBeDefined();
+      // Verify ordering: throttled must appear before end.
+      const throttledIdx = logger.events.findIndex((e) => e.eventType === 'llm_call_throttled');
+      const endIdx = logger.events.findIndex((e) => e.eventType === 'llm_call_end');
+      expect(throttledIdx).toBeGreaterThanOrEqual(0);
+      expect(endIdx).toBeGreaterThan(throttledIdx);
+
       const endEvent = logger.find('llm_call_end') as LLMCallEndEvent | undefined;
       expect(endEvent?.success).toBe(false);
       expect(endEvent?.errorKind).toBe('aborted');

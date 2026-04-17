@@ -14,6 +14,21 @@ import type { OpenAICompatibleProvider, ProviderBinding, ProviderQuirks } from '
 
 const FALLBACK_RESET_MS = 60_000;
 
+function defaultEndpointFor(provider: OpenAICompatibleProvider): string {
+  switch (provider) {
+    case 'deepseek':
+      return 'https://api.deepseek.com/v1';
+    case 'mistral':
+      return 'https://api.mistral.ai/v1';
+    case 'groq':
+      return 'https://api.groq.com/openai/v1';
+    case 'together':
+      return 'https://api.together.xyz/v1';
+    case 'ollama':
+      return 'http://localhost:11434/v1';
+  }
+}
+
 function quirksFor(provider: OpenAICompatibleProvider): ProviderQuirks {
   const defaultSanitization = { stripThinkingTags: true, stripJsonFence: false };
   switch (provider) {
@@ -111,9 +126,10 @@ function readRateLimitHeadersFor(
 
 export function createOpenAICompatibleBinding(provider: OpenAICompatibleProvider): ProviderBinding {
   const readFn = readRateLimitHeadersFor(provider);
+  const fallbackEndpoint = defaultEndpointFor(provider);
   return {
     buildRequest: (request, config) =>
-      buildOpenAILikeRequest(config.endpoint ?? '', request, config),
+      buildOpenAILikeRequest(config.endpoint ?? fallbackEndpoint, request, config),
     parseResponse: (body) => parseOpenAILikeResponse(body),
     classifyError: (signal) => classifyOpenAILikeError(signal, provider),
     readRateLimitHeaders: (headers, nowMono) => readFn(headers, nowMono),

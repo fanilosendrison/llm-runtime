@@ -758,6 +758,12 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const fetchErr = logger.find('llm_call_fetch_error') as LLMCallFetchErrorEvent | undefined;
       expect(fetchErr).toBeDefined();
       expect(fetchErr?.networkErrorKind).toBeDefined();
+      // Verify the classification: retry_scheduled should indicate transient_provider.
+      const retrySched = logger.find('llm_call_retry_scheduled');
+      expect(retrySched).toBeDefined();
+      if (retrySched !== undefined && 'reason' in retrySched) {
+        expect((retrySched as unknown as { reason: string }).reason).toBe('transient_provider');
+      }
     });
 
     it('T-EC-114 | maxAttempts=5, all attempts fail with network err → throws TransientProviderError', async () => {

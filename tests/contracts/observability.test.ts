@@ -145,6 +145,7 @@ describe('observability contracts', () => {
       await adapter.call(REQUEST).catch(() => undefined);
       await adapter.call(REQUEST).catch(() => undefined);
       const e = logger.find('llm_call_throttled');
+      expect(e).toBeDefined();
       if (e === undefined || e.eventType !== 'llm_call_throttled') return;
       assertBaseFields(e);
       expect(typeof e.waitMs).toBe('number');
@@ -259,6 +260,7 @@ describe('observability contracts', () => {
       );
       await adapter.call(REQUEST).catch(() => undefined);
       const e = logger.find('llm_call_sanitized');
+      expect(e).toBeDefined();
       if (e === undefined || e.eventType !== 'llm_call_sanitized') return;
       assertBaseFields(e);
       expect(typeof e.thinkingTagsRemoved).toBe('boolean');
@@ -281,6 +283,7 @@ describe('observability contracts', () => {
       );
       await adapter.call(REQUEST).catch(() => undefined);
       const e = logger.find('llm_call_unknown_error_classified');
+      expect(e).toBeDefined();
       if (e === undefined || e.eventType !== 'llm_call_unknown_error_classified') return;
       assertBaseFields(e);
       expect(typeof e.rawMessage).toBe('string');
@@ -309,6 +312,7 @@ describe('observability contracts', () => {
       );
       await adapter.call(REQUEST).catch(() => undefined);
       const e = logger.find('llm_call_unknown_termination');
+      expect(e).toBeDefined();
       if (e === undefined || e.eventType !== 'llm_call_unknown_termination') return;
       assertBaseFields(e);
       expect(typeof e.rawSignal).toBe('string');
@@ -340,58 +344,82 @@ describe('observability contracts', () => {
         body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 1 } },
         headers: {},
       });
-      const logger = createMockLogger();
-      const adapter = createOpenAIEmbeddingAdapter(
-        baseEmbConfig({
-          batchSize: 2,
-          logging: { enabled: true, logger },
-        }),
-      );
-      // Wire fetch — providerOptions is not on EmbeddingAdapterConfig, so we expect
-      // the implementation to accept it via an extended shape during GREEN; for RED,
-      // we just attempt the call and inspect events.
-      void fetchImpl;
-      await adapter.embed(['a']).catch(() => undefined);
-      const e = logger.find('llm_embedding_start');
-      if (e === undefined || e.eventType !== 'llm_embedding_start') return;
-      assertBaseFields(e);
-      expect(typeof e.endpoint).toBe('string');
-      expect(typeof e.textsCount).toBe('number');
-      expect(typeof e.batchSize).toBe('number');
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const logger = createMockLogger();
+        const adapter = createOpenAIEmbeddingAdapter(
+          baseEmbConfig({
+            batchSize: 2,
+            logging: { enabled: true, logger },
+          }),
+        );
+        await adapter.embed(['a']).catch(() => undefined);
+        const e = logger.find('llm_embedding_start');
+        expect(e).toBeDefined();
+        if (e === undefined || e.eventType !== 'llm_embedding_start') return;
+        assertBaseFields(e);
+        expect(typeof e.endpoint).toBe('string');
+        expect(typeof e.textsCount).toBe('number');
+        expect(typeof e.batchSize).toBe('number');
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it('C-OB-13 | llm_embedding_batch conforms (batchIndex, batchTextsCount, durationMs)', async () => {
-      const logger = createMockLogger();
-      const adapter = createOpenAIEmbeddingAdapter(
-        baseEmbConfig({
-          batchSize: 1,
-          logging: { enabled: true, logger },
-        }),
-      );
-      await adapter.embed(['a', 'b', 'c']).catch(() => undefined);
-      const e = logger.find('llm_embedding_batch');
-      if (e === undefined || e.eventType !== 'llm_embedding_batch') return;
-      assertBaseFields(e);
-      expect(typeof e.batchIndex).toBe('number');
-      expect(typeof e.batchTextsCount).toBe('number');
-      expect(typeof e.durationMs).toBe('number');
+      const fetchImpl = createMockFetch({
+        status: 200,
+        body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 1 } },
+        headers: {},
+      });
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const logger = createMockLogger();
+        const adapter = createOpenAIEmbeddingAdapter(
+          baseEmbConfig({
+            batchSize: 1,
+            logging: { enabled: true, logger },
+          }),
+        );
+        await adapter.embed(['a', 'b', 'c']).catch(() => undefined);
+        const e = logger.find('llm_embedding_batch');
+        expect(e).toBeDefined();
+        if (e === undefined || e.eventType !== 'llm_embedding_batch') return;
+        assertBaseFields(e);
+        expect(typeof e.batchIndex).toBe('number');
+        expect(typeof e.batchTextsCount).toBe('number');
+        expect(typeof e.durationMs).toBe('number');
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it('C-OB-14 | llm_embedding_end conforms (success, totalBatches, totalDurationMs, errorKind?)', async () => {
-      const logger = createMockLogger();
-      const adapter = createOpenAIEmbeddingAdapter(
-        baseEmbConfig({
-          batchSize: 2,
-          logging: { enabled: true, logger },
-        }),
-      );
-      await adapter.embed(['a']).catch(() => undefined);
-      const e = logger.find('llm_embedding_end');
-      if (e === undefined || e.eventType !== 'llm_embedding_end') return;
-      assertBaseFields(e);
-      expect(typeof e.success).toBe('boolean');
-      expect(typeof e.totalBatches).toBe('number');
-      expect(typeof e.totalDurationMs).toBe('number');
+      const fetchImpl = createMockFetch({
+        status: 200,
+        body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 1 } },
+        headers: {},
+      });
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const logger = createMockLogger();
+        const adapter = createOpenAIEmbeddingAdapter(
+          baseEmbConfig({
+            batchSize: 2,
+            logging: { enabled: true, logger },
+          }),
+        );
+        await adapter.embed(['a']).catch(() => undefined);
+        const e = logger.find('llm_embedding_end');
+        expect(e).toBeDefined();
+        if (e === undefined || e.eventType !== 'llm_embedding_end') return;
+        assertBaseFields(e);
+        expect(typeof e.success).toBe('boolean');
+        expect(typeof e.totalBatches).toBe('number');
+        expect(typeof e.totalDurationMs).toBe('number');
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
   });
 
@@ -412,14 +440,24 @@ describe('observability contracts', () => {
     });
 
     it('C-OB-16 | all events of a successful embedding share the same callId', async () => {
-      const logger = createMockLogger();
-      const adapter = createOpenAIEmbeddingAdapter(
-        baseEmbConfig({
-          logging: { enabled: true, logger },
-        }),
-      );
-      await adapter.embed(['a']).catch(() => undefined);
-      eventAssertions.allSameCallId(logger.events);
+      const fetchImpl = createMockFetch({
+        status: 200,
+        body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 1 } },
+        headers: {},
+      });
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const logger = createMockLogger();
+        const adapter = createOpenAIEmbeddingAdapter(
+          baseEmbConfig({
+            logging: { enabled: true, logger },
+          }),
+        );
+        await adapter.embed(['a']).catch(() => undefined);
+        eventAssertions.allSameCallId(logger.events);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it('C-OB-17 | two consecutive calls have different callIds', async () => {
@@ -507,18 +545,28 @@ describe('observability contracts', () => {
     });
 
     it('C-OB-21 | embedding, 3 batches: embedding_start, embedding_batch × 3, embedding_end', async () => {
-      const logger = createMockLogger();
-      const adapter = createOpenAIEmbeddingAdapter(
-        baseEmbConfig({
-          batchSize: 1,
-          logging: { enabled: true, logger },
-        }),
-      );
-      await adapter.embed(['a', 'b', 'c']).catch(() => undefined);
-      const batches = eventAssertions.countOfType(logger.events, 'llm_embedding_batch');
-      expect(batches).toBe(3);
-      expect(logger.events[0]?.eventType).toBe('llm_embedding_start');
-      expect(logger.events[logger.events.length - 1]?.eventType).toBe('llm_embedding_end');
+      const fetchImpl = createMockFetch({
+        status: 200,
+        body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 1 } },
+        headers: {},
+      });
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const logger = createMockLogger();
+        const adapter = createOpenAIEmbeddingAdapter(
+          baseEmbConfig({
+            batchSize: 1,
+            logging: { enabled: true, logger },
+          }),
+        );
+        await adapter.embed(['a', 'b', 'c']).catch(() => undefined);
+        const batches = eventAssertions.countOfType(logger.events, 'llm_embedding_batch');
+        expect(batches).toBe(3);
+        expect(logger.events[0]?.eventType).toBe('llm_embedding_start');
+        expect(logger.events[logger.events.length - 1]?.eventType).toBe('llm_embedding_end');
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it('C-OB-22 | llm_call_end is the last event of any completion', async () => {
@@ -535,12 +583,22 @@ describe('observability contracts', () => {
     });
 
     it('C-OB-23 | llm_embedding_end is the last event of any embedding', async () => {
-      const logger = createMockLogger();
-      const adapter = createOpenAIEmbeddingAdapter(
-        baseEmbConfig({ logging: { enabled: true, logger } }),
-      );
-      await adapter.embed(['a']).catch(() => undefined);
-      eventAssertions.endEventFinal(logger.events);
+      const fetchImpl = createMockFetch({
+        status: 200,
+        body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 1 } },
+        headers: {},
+      });
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const logger = createMockLogger();
+        const adapter = createOpenAIEmbeddingAdapter(
+          baseEmbConfig({ logging: { enabled: true, logger } }),
+        );
+        await adapter.embed(['a']).catch(() => undefined);
+        eventAssertions.endEventFinal(logger.events);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
   });
 

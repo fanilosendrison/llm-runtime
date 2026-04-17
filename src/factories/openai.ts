@@ -10,7 +10,13 @@ import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { AdapterConfig, LLMRequest, LLMResponse, ProviderAdapter } from '../types.js';
 
 export function createOpenAIAdapter(config: AdapterConfig): ProviderAdapter {
-  const frozenConfig: AdapterConfig = { ...config };
+  const { providerOptions, logging, integrity, ...cloneable } = config;
+  const frozenConfig: AdapterConfig = {
+    ...structuredClone(cloneable),
+    ...(integrity !== undefined ? { integrity: { ...integrity } } : {}),
+    ...(logging !== undefined ? { logging: { ...logging } } : {}),
+    ...(providerOptions !== undefined ? { providerOptions: { ...providerOptions } } : {}),
+  };
   const logger = resolveLogger(frozenConfig.logging);
   const stats = createStats();
   let snapshot: RateLimitSnapshot | null = null;

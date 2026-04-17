@@ -5,7 +5,7 @@
 // Mapping test → spec : §24.1 increments sur succès, §24.2 usage partiel,
 // §24.3 no reset, §24.4 immutabilité, §24.5 stats embedding.
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createAnthropicAdapter } from '../../src/factories/anthropic.js';
 import { createOpenAIEmbeddingAdapter } from '../../src/factories/openai-embeddings.js';
@@ -224,15 +224,19 @@ describe('stats contracts', () => {
         body: { data: [{ embedding: [0.1, 0.2] }], usage: { prompt_tokens: 2 } },
         headers: {},
       });
-      void fetchImpl;
-      const adapter = createOpenAIEmbeddingAdapter(baseEmbConfig());
-      await adapter.embed(['a']).catch(() => undefined);
-      await adapter.embed(['b']).catch(() => undefined);
-      await adapter.embed(['c']).catch(() => undefined);
-      expect(adapter.stats.totalCalls).toBe(3);
-      expect(adapter.stats.totalDurationMs).toBeGreaterThan(0);
-      expect(adapter.stats.totalInputTokens).toBe(0);
-      expect(adapter.stats.totalOutputTokens).toBe(0);
+      vi.stubGlobal('fetch', fetchImpl);
+      try {
+        const adapter = createOpenAIEmbeddingAdapter(baseEmbConfig());
+        await adapter.embed(['a']).catch(() => undefined);
+        await adapter.embed(['b']).catch(() => undefined);
+        await adapter.embed(['c']).catch(() => undefined);
+        expect(adapter.stats.totalCalls).toBe(3);
+        expect(adapter.stats.totalDurationMs).toBeGreaterThan(0);
+        expect(adapter.stats.totalInputTokens).toBe(0);
+        expect(adapter.stats.totalOutputTokens).toBe(0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it('C-ST-12 | EmbeddingAdapter, 1 terminal failure → totalCalls === 0', async () => {

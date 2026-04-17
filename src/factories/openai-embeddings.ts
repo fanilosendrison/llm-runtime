@@ -9,7 +9,11 @@ import { createStats, readOnlyView } from '../infra/stats.js';
 import type { EmbeddingAdapter, EmbeddingAdapterConfig } from '../types.js';
 
 export function createOpenAIEmbeddingAdapter(config: EmbeddingAdapterConfig): EmbeddingAdapter {
-  const frozenConfig: EmbeddingAdapterConfig = { ...config };
+  const { logging, ...cloneable } = config;
+  const frozenConfig: EmbeddingAdapterConfig = {
+    ...structuredClone(cloneable),
+    ...(logging !== undefined ? { logging: { ...logging } } : {}),
+  };
   const logger = resolveLogger(frozenConfig.logging);
   const stats = createStats();
 

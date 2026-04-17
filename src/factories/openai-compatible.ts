@@ -31,8 +31,15 @@ export function createOpenAICompatibleAdapter(
       message: `unsupported openai-compatible provider: ${String(config.provider)}`,
     });
   }
-  const { provider, ...rest } = config;
-  const frozenConfig: AdapterConfig = { ...(rest as AdapterConfig) };
+  const { provider, providerOptions, logging, integrity, ...cloneable } = config;
+  const frozenConfig: AdapterConfig = {
+    ...structuredClone(
+      cloneable as Omit<AdapterConfig, 'providerOptions' | 'logging' | 'integrity'>,
+    ),
+    ...(integrity !== undefined ? { integrity: { ...integrity } } : {}),
+    ...(logging !== undefined ? { logging: { ...logging } } : {}),
+    ...(providerOptions !== undefined ? { providerOptions: { ...providerOptions } } : {}),
+  };
   const binding = createOpenAICompatibleBinding(provider);
   const logger = resolveLogger(frozenConfig.logging);
   const stats = createStats();
