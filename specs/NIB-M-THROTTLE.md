@@ -47,11 +47,9 @@ La séparation pure/stateful est normative : `resolveThrottleDecision` est testa
 - Types `ThrottleDecision`, `RateLimitSnapshot`, `ThrottleSnapshotService`.
 
 ```ts
-interface ThrottleDecision {
-  throttle: boolean;
-  waitMs?: number;
-  reason: string;
-}
+type ThrottleDecision =
+  | { readonly throttle: false; readonly reason: ThrottleDecisionReason }
+  | { readonly throttle: true; readonly waitMs: number; readonly reason: ThrottleDecisionReason };
 
 interface RateLimitSnapshot {
   remainingTokens: number;

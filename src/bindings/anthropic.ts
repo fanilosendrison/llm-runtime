@@ -5,7 +5,7 @@ import { classifyErrorBase } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
 import { parseIntStr } from './_internal/openai-common.js';
-import type { CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
+import type { BindingConfig, CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
 
 const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
@@ -26,12 +26,7 @@ const TERMINATION_MAP: Readonly<Record<string, TerminationReason>> = Object.free
 
 function buildRequest(
   request: LLMRequest,
-  config: {
-    model: string;
-    apiKey: string;
-    endpoint?: string;
-    providerOptions?: Record<string, unknown>;
-  },
+  config: BindingConfig,
 ): CanonicalHttpRequest {
   const systemParts: string[] = [];
   const chatMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];

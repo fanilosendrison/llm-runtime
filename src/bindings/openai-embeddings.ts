@@ -71,6 +71,7 @@ function parseEmbeddings(body: unknown, _headers: Record<string, string>): numbe
 }
 
 export const openaiEmbeddingsBinding: EmbeddingBinding = {
+  provider: 'openai',
   buildRequest,
   parseEmbeddings,
   classifyError: (signal) => classifyOpenAILikeError(signal, 'openai-embeddings'),
