@@ -171,6 +171,24 @@ Les prompts ne sont **jamais** loggés. Ni `systemPrompt`, ni `userPrompt`, ni l
 
 Tous les `Record<string, string>` de headers circulant dans le runtime (après conversion par l'engine) utilisent des **clés lowercase**. Invariant garanti par `Object.fromEntries(response.headers.entries())` — la Fetch spec normalise `Headers.entries()` en lowercase. Tous les accès downstream (`readRateLimitHeaders`, `parseRetryAfter`, `classifyError`, bindings) utilisent des clés lowercase.
 
+### I-14 — Parsing JSON centralisé dans l'engine
+
+Le `JSON.parse(responseText)` est exécuté **uniquement** dans l'engine (`executeCall`, `executeEmbedding`). Les bindings reçoivent le body déjà parsé en `unknown` : `parseResponse(body: unknown, headers)` et `parseEmbeddings(body: unknown, headers)`. Un binding n'appelle **jamais** `JSON.parse` lui-même.
+
+**Conséquences** :
+- Un seul point d'émission de `ResponseParseError` pour cause de JSON malformé (engine), distinct des `ResponseParseError` pour cause de structure inattendue (binding).
+- Les bindings restent purs et transport-agnostiques : ils valident la forme d'un objet JS, pas le transport HTTP.
+- Le test des bindings n'a pas besoin de fabriquer des `string` JSON valides — un objet JS suffit.
+
+### I-15 — Horloges injectées aux bindings
+
+Les bindings qui ont besoin du temps (conversion d'un timestamp wall-clock de reset rate-limit vers le référentiel monotone interne) le reçoivent en argument : `readRateLimitHeaders(headers, nowMono: number, nowWall: Date)`. Un binding n'appelle **jamais** `Date.now()`, `performance.now()`, ni `new Date()` directement.
+
+**Conséquences** :
+- Source unique de vérité temporelle : `infra/clock.ts` (cf. NIB-M-INFRA-UTILS §3.2.3, C-IU1).
+- Les bindings restent des fonctions pures (modulo clock args) : déterministes et testables sans mock global.
+- Cohérence wall↔monotone garantie par construction — les deux valeurs passées sont capturées au même instant par l'engine.
+
 ---
 
 ## 4. Architecture en 4 couches
