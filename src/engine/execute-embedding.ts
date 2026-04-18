@@ -156,12 +156,15 @@ export async function executeEmbedding(
         }
       }
 
-      logger.emit({
-        ...baseEvent('llm_embedding_batch'),
-        batchIndex,
-        batchTextsCount: batchTexts.length,
-        durationMs: 0,
-      } as never);
+      const batchStartMono = clock.nowMono();
+      function emitBatchEvent(): void {
+        logger.emit({
+          ...baseEvent('llm_embedding_batch'),
+          batchIndex,
+          batchTextsCount: batchTexts.length,
+          durationMs: Math.max(0, Math.round(clock.nowMono() - batchStartMono)),
+        } as never);
+      }
       const composed = composeSignal(externalSignal, timeoutMs);
       const canonical = binding.buildRequest(batchTexts, bindingConfig);
       let response: Response | undefined;
@@ -204,6 +207,7 @@ export async function executeEmbedding(
             cause: fetchError,
           });
           lastHeaders = {};
+          emitBatchEvent();
           continue;
         }
         const networkErrorKind = classifyNetworkError(fetchError);
@@ -223,6 +227,7 @@ export async function executeEmbedding(
           });
         }
         lastHeaders = {};
+        emitBatchEvent();
         continue;
       }
 
@@ -247,6 +252,7 @@ export async function executeEmbedding(
           retryable: isRetriableKind(classified.kind),
         } as never);
         lastError = classified;
+        emitBatchEvent();
         continue;
       }
 
@@ -277,7 +283,8 @@ export async function executeEmbedding(
         throw enriched;
       }
 
-      // Success for this batch — no additional batch event (emitted at attempt start).
+      // Emit batch event after successful fetch with actual duration.
+      emitBatchEvent();
       for (const vec of batchVectors) results.push(vec);
       batchSuccess = true;
       break;
