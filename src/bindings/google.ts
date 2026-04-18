@@ -4,9 +4,19 @@ import { ContentFilterError, type LLMRuntimeError, ResponseParseError } from '..
 import { classifyErrorBase, type ProviderErrorSignal } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
+import { coerceBodyToObject } from './_internal/openai-common.js';
 import type { CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
 
 const DEFAULT_BASE = 'https://generativelanguage.googleapis.com';
+
+const FILTER_REASONS = new Set([
+  'SAFETY',
+  'RECITATION',
+  'BLOCKLIST',
+  'PROHIBITED_CONTENT',
+  'SPII',
+  'LANGUAGE',
+]);
 
 const TERMINATION_MAP: Readonly<Record<string, TerminationReason>> = Object.freeze({
   STOP: 'completed',
@@ -63,17 +73,7 @@ function buildRequest(
 }
 
 function parseResponse(body: unknown, _headers: Record<string, string>): ParsedProviderResponse {
-  if (typeof body === 'string') {
-    try {
-      body = JSON.parse(body);
-    } catch (cause) {
-      throw new ResponseParseError({ message: 'google: body is not valid JSON', cause });
-    }
-  }
-  if (body === null || typeof body !== 'object') {
-    throw new ResponseParseError({ message: 'google: body is not an object' });
-  }
-  const obj = body as Record<string, unknown>;
+  const obj = coerceBodyToObject(body, 'google');
 
   // Safety-block: prompt blocked before any candidate was produced.
   const promptFeedback = obj['promptFeedback'] as Record<string, unknown> | undefined;
@@ -96,14 +96,6 @@ function parseResponse(body: unknown, _headers: Record<string, string>): ParsedP
 
   // Candidate-level safety block: finishReason signals filter + no content produced.
   const candidateFinish = candidate['finishReason'];
-  const FILTER_REASONS = new Set([
-    'SAFETY',
-    'RECITATION',
-    'BLOCKLIST',
-    'PROHIBITED_CONTENT',
-    'SPII',
-    'LANGUAGE',
-  ]);
   if (
     typeof candidateFinish === 'string' &&
     FILTER_REASONS.has(candidateFinish) &&

@@ -37,6 +37,8 @@ export interface ExecuteEmbeddingStatsDelta {
   readonly durationMs: number;
 }
 
+const NEVER_ABORTING_SIGNAL: AbortSignal = new AbortController().signal;
+
 const DEFAULT_RETRY = { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 } as const;
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_BATCH_SIZE = 100;
@@ -136,7 +138,7 @@ export async function executeEmbedding(
           errorKind: lastError.kind,
         } as import('../types.js').LLMEmbeddingRetryScheduledEvent);
         if (decision.delayMs > 0) {
-          const sleepSignal = externalSignal ?? new AbortController().signal;
+          const sleepSignal = externalSignal ?? NEVER_ABORTING_SIGNAL;
           try {
             await abortableSleep(decision.delayMs, sleepSignal);
           } catch (cause) {

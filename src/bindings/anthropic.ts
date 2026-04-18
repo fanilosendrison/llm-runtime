@@ -4,7 +4,7 @@ import { ResponseParseError } from '../errors/index.js';
 import { classifyErrorBase } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
-import { parseIntStr } from './_internal/openai-common.js';
+import { coerceBodyToObject, parseIntStr } from './_internal/openai-common.js';
 import type { BindingConfig, CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
 
 const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
@@ -66,20 +66,7 @@ function buildRequest(
 }
 
 function parseResponse(body: unknown, _headers: Record<string, string>): ParsedProviderResponse {
-  if (typeof body === 'string') {
-    try {
-      body = JSON.parse(body);
-    } catch (cause) {
-      throw new ResponseParseError({
-        message: 'anthropic: body is not valid JSON',
-        cause,
-      });
-    }
-  }
-  if (body === null || typeof body !== 'object') {
-    throw new ResponseParseError({ message: 'anthropic: body is not an object' });
-  }
-  const obj = body as Record<string, unknown>;
+  const obj = coerceBodyToObject(body, 'anthropic');
   if (!Array.isArray(obj['content'])) {
     throw new ResponseParseError({ message: 'anthropic: missing content[]' });
   }
