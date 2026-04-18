@@ -282,7 +282,7 @@ export interface AdapterConfig {
   readonly sanitization?: SanitizationPolicy;
   readonly integrity?: IntegrityPolicy;
   readonly logging?: LoggingPolicy;
-  readonly providerOptions?: Record<string, unknown>;
+  readonly providerOptions?: unknown;
 }
 
 export interface EmbeddingAdapterConfig {
