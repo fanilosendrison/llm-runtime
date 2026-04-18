@@ -46,5 +46,6 @@ Items atomiques derives de `spec-drift.json` (17 drifts detectes, 16 `drift_id` 
 
 - [x] [minor] validateAdapterConfig and validateEmbeddingAdapterConfig duplicate retry and timeout validation logic — src/factories/validate-config.ts:12 (date: 2026-04-18, finding_id: 7bb2e5e0f7de57ad)
 - [x] [minor] JSON body parsing guard pattern duplicated across anthropic.ts, google.ts, openai-common.ts, openai-embeddings.ts — src/bindings/anthropic.ts:73 (date: 2026-04-18, finding_id: e2a5b9b2a7d8c12f)
+- [ ] [notable] AdapterConfig construction duplicated ~69 times across 11 test files — extract shared baseAdapterConfig helper to tests/helpers/base-adapter-config.ts (date: 2026-04-18, finding_id: e8a1d4f2b7c03965)
 
 
