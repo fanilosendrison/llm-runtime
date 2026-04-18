@@ -40,6 +40,7 @@ superseded_by: []
 ```ts
 export async function executeCall(
   request: LLMRequest,
+  externalSignal: AbortSignal | undefined,      // extrait de options.signal par l'adapter
   binding: ProviderBinding,
   config: AdapterConfig,
   throttleSnapshot: ThrottleSnapshotService,    // injecté par la factory
@@ -127,7 +128,7 @@ for (let attempt = 0; attempt < config.retry.maxAttempts; attempt++) {
 ### 3.8 Pré-check : signal déjà aborted
 
 ```ts
-if (request.signal?.aborted) {
+if (externalSignal?.aborted) {
   if (cleanup) cleanup();  // nettoyer un éventuel timer précédent
   const err = new AbortedError("request aborted before execution");
   enrichAndThrow(err, { callId, provider: binding.provider, model: config.model, attempts: attempt });
@@ -190,7 +191,7 @@ logger.emit({
 ```ts
 if (attempt > 0) {
   try {
-    await abortableSleep(retryDecision.delayMs, request.signal);
+    await abortableSleep(retryDecision.delayMs, externalSignal);
   } catch (e) {
     // Le sleep a reject → abort externe pendant l'attente.
     const err = new AbortedError("aborted during retry wait", { cause: e });
@@ -221,7 +222,7 @@ if (throttleDecision.throttle === true) {
     estimatedTokens, snapshotState: snapshot?.state ?? "null",
   });
   try {
-    await abortableSleep(throttleDecision.waitMs, request.signal);
+    await abortableSleep(throttleDecision.waitMs, externalSignal);
   } catch (e) {
     const err = new AbortedError("aborted during throttle wait", { cause: e });
     enrichAndThrow(err, { callId, provider: binding.provider, model: config.model, attempts: attempt });
@@ -250,7 +251,7 @@ Si le binding throw (ne devrait pas, buildRequest est pur) : enrichir et throw. 
 ### 3.18 Compose signal avec timeout
 
 ```ts
-const { signal: composedSignal, cleanup } = composeSignal(request.signal, config.timeout.perAttemptMs);
+const { signal: composedSignal, cleanup } = composeSignal(externalSignal, config.timeout.perAttemptMs);
 ```
 
 Voir NIB-M-SIGNAL-COMPOSER §3.1 pour les règles de priorité (abort externe > timeout interne).
@@ -271,7 +272,7 @@ try {
 } catch (err) {
   cleanup();
   lastHeaders = {};
-  const providerSignal = buildProviderErrorSignalFromFetchError(err, request.signal);
+  const providerSignal = buildProviderErrorSignalFromFetchError(err, externalSignal);
   logger.emit({
     type: "llm_call_fetch_error",
     callId, provider: binding.provider, model: config.model,

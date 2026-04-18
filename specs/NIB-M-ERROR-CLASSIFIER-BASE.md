@@ -189,7 +189,7 @@ Le classifier ne connaît pas la policy timeout qui a déclenché. Deux options 
 ```ts
 // NIB-M-EXECUTE-CALL step 7.g :
 catch (err) {
-  if (request.signal?.aborted) {
+  if (externalSignal?.aborted) {
     throw new AbortedError("Aborted by external signal", { cause: err, callId, provider, model });
   }
   if (err instanceof DOMException && err.name === "TimeoutError") {

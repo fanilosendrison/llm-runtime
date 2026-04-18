@@ -64,9 +64,9 @@ function abortableSleep(
 ### 2.3 Consommateurs
 
 - **NIB-M-EXECUTE-CALL** :
-  - step 7.e : `composeSignal(config.timeout.perAttemptMs, request.signal)` pour wrapper chaque `fetch`.
-  - step 7.b : `abortableSleep(retryDecision.delayMs, request.signal)` pour le delay retry.
-  - step 6.c : `abortableSleep(throttleDecision.waitMs, request.signal)` pour le throttle.
+  - step 7.e : `composeSignal(config.timeout.perAttemptMs, externalSignal)` pour wrapper chaque `fetch`.
+  - step 7.b : `abortableSleep(retryDecision.delayMs, externalSignal)` pour le delay retry.
+  - step 6.c : `abortableSleep(throttleDecision.waitMs, externalSignal)` pour le throttle.
 
 - **NIB-M-EXECUTE-EMBEDDING** : même pattern pour sa boucle batch.
 
@@ -85,7 +85,7 @@ function composeSignal(
 
 **Entrée** :
 - `timeoutMs: number` — durée du timeout interne en millisecondes. Doit être > 0 (non vérifié par la fonction — contrat du caller).
-- `externalSignal?: AbortSignal` — signal externe optionnel (typiquement `request.signal` du consommateur).
+- `externalSignal?: AbortSignal` — signal externe optionnel (typiquement `options.signal` passé par le consommateur à `adapter.call(request, options?)`, transmis à l'engine par la factory).
 
 **Sortie** : un `AbortSignal` composite qui s'active dès que :
 - Le timeout interne expire (après `timeoutMs` ms), OU
@@ -143,7 +143,7 @@ try {
 } catch (err) {
   // R-4 : le signal composite ne dit pas d'où vient l'abort.
   // L'engine reclasse en regardant externalSignal d'abord (priorité).
-  if (request.signal?.aborted) {
+  if (externalSignal?.aborted) {
     throw new AbortedError("Aborted by external signal", { cause: err, callId, provider, model });
   }
   // Sinon : c'est le timeout interne qui a déclenché.
@@ -155,7 +155,7 @@ try {
 }
 ```
 
-**Priorité externe > interne** garantie par l'ordre de vérification : on regarde `request.signal?.aborted` **avant** de regarder `err.name === "TimeoutError"`.
+**Priorité externe > interne** garantie par l'ordre de vérification : on regarde `externalSignal?.aborted` **avant** de regarder `err.name === "TimeoutError"`.
 
 ---
 
@@ -237,7 +237,7 @@ Ce module rejecte avec le `DOMException` brut. Le reclassement en `AbortedError`
 ```ts
 // NIB-M-EXECUTE-CALL step 7.b :
 try {
-  await abortableSleep(retryDecision.delayMs!, request.signal);
+  await abortableSleep(retryDecision.delayMs!, externalSignal);
 } catch (e) {
   // Tout reject est assumé être un abort externe (R-1 garantit).
   throw new AbortedError("Aborted during retry sleep", {
@@ -277,7 +277,7 @@ try {
   await fetch(url, { signal });
 } catch (err) {
   // err est un DOMException("AbortError" ou "TimeoutError")
-  // L'engine discrimine par externalSignal.aborted (request.signal.aborted === true).
+  // L'engine discrimine par externalSignal.aborted (externalSignal.aborted === true).
 }
 ```
 
@@ -343,7 +343,7 @@ const adapter = createAnthropicAdapter({
 try {
   await adapter.call(request);
 } catch (e) {
-  // e est AbortedError (pas TimeoutError), car request.signal.aborted === true
+  // e est AbortedError (pas TimeoutError), car externalSignal.aborted === true
   // malgré que AbortSignal.any combine les deux.
   // Reclassement fait par NIB-M-EXECUTE-CALL step 7.g.
 }
@@ -400,7 +400,7 @@ Pas de polyfill. Pas de `setTimeout` promise-wrap custom. Dépendance sur `Abort
 ### 8.1 `composeSignal` dans `executeCall` step 7.e
 
 ```ts
-const composedSignal = composeSignal(config.timeout.perAttemptMs, request.signal);
+const composedSignal = composeSignal(config.timeout.perAttemptMs, externalSignal);
 
 let response: Response;
 try {
@@ -414,7 +414,7 @@ try {
   });
 } catch (err) {
   // Reclassement (step 7.g) :
-  if (request.signal?.aborted) throw new AbortedError(/* ... */);
+  if (externalSignal?.aborted) throw new AbortedError(/* ... */);
   if (err instanceof DOMException && err.name === "TimeoutError") throw new TimeoutError(/* ... */);
   throw classifyNetworkError(err);
 }
@@ -426,7 +426,7 @@ try {
 if (retryDecision.retry) {
   logger.emit({ eventType: "llm_call_retry_scheduled", ... });
   try {
-    await abortableSleep(retryDecision.delayMs!, request.signal);
+    await abortableSleep(retryDecision.delayMs!, externalSignal);
   } catch (e) {
     throw new AbortedError("Aborted during retry sleep", {
       cause: e, provider, model, callId, attempts: attempt
@@ -441,7 +441,7 @@ if (retryDecision.retry) {
 if (throttleDecision.throttle) {
   logger.emit({ eventType: "llm_call_throttled", ... });
   try {
-    await abortableSleep(throttleDecision.waitMs!, request.signal);
+    await abortableSleep(throttleDecision.waitMs!, externalSignal);
   } catch (e) {
     throw new AbortedError("Aborted during throttle wait", {
       cause: e, provider, model, callId, attempts: attempt

@@ -434,7 +434,7 @@ if (throttleDecision.throttle) {
   });
 
   try {
-    await abortableSleep(throttleDecision.waitMs!, request.signal);
+    await abortableSleep(throttleDecision.waitMs!, externalSignal);
   } catch (e) {
     throw new AbortedError("Aborted during throttle wait", {
       cause: e, provider, model, callId, attempts: attempt

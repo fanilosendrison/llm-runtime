@@ -501,7 +501,7 @@ if (attempt > 0) {
 
   // Sleep interruptible
   try {
-    await abortableSleep(retryDecision.delayMs!, request.signal);
+    await abortableSleep(retryDecision.delayMs!, externalSignal);
   } catch (e) {
     // Reclassement en AbortedError — voir NIB-M-SIGNAL-COMPOSER
     throw new AbortedError("Aborted during retry sleep", {
