@@ -129,16 +129,17 @@ export async function executeCall(
   });
 
   // ─── validation + abort initial ───
+  const bindingConfig = {
+    model,
+    apiKey: config.apiKey,
+    ...(config.endpoint !== undefined ? { endpoint: config.endpoint } : {}),
+    ...(config.providerOptions !== undefined
+      ? { providerOptions: config.providerOptions as Record<string, unknown> }
+      : {}),
+  };
   const bindingRequestUrl = (() => {
     try {
-      return binding.buildRequest(request, {
-        model,
-        apiKey: config.apiKey,
-        ...(config.endpoint !== undefined ? { endpoint: config.endpoint } : {}),
-        ...(config.providerOptions !== undefined
-          ? { providerOptions: config.providerOptions as Record<string, unknown> }
-          : {}),
-      }).url;
+      return binding.buildRequest(request, bindingConfig).url;
     } catch {
       return '';
     }
@@ -158,12 +159,13 @@ export async function executeCall(
       usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
       providerModel?: string;
       errorKind?: string;
+      durationMs?: number;
     } = {},
   ): void {
     const endPayload: Record<string, unknown> = {
       ...baseEvent('llm_call_end'),
       success,
-      durationMs: Math.max(0, Math.round(clock.nowMono() - startMono)),
+      durationMs: extra.durationMs ?? Math.max(0, Math.round(clock.nowMono() - startMono)),
       attemptCount,
     };
     if (extra.termination !== undefined) endPayload['termination'] = extra.termination;
@@ -190,15 +192,6 @@ export async function executeCall(
     emitEnd(false, 0, { errorKind: 'aborted' });
     throw enriched;
   }
-
-  const bindingConfig = {
-    model,
-    apiKey: config.apiKey,
-    ...(config.endpoint !== undefined ? { endpoint: config.endpoint } : {}),
-    ...(config.providerOptions !== undefined
-      ? { providerOptions: config.providerOptions as Record<string, unknown> }
-      : {}),
-  };
 
   let lastError: Error | null = null;
   let lastHeaders: Record<string, string> = {};
@@ -601,6 +594,7 @@ export async function executeCall(
       termination,
       usage: parsed.usage,
       ...(parsed.providerModel !== undefined ? { providerModel: parsed.providerModel } : {}),
+      durationMs,
     });
 
     return {

@@ -3,6 +3,7 @@
 import { ResponseParseError } from '../errors/index.js';
 import {
   classifyOpenAILikeError,
+  coerceBodyToObject,
   readOpenAILikeRateLimitHeaders,
 } from './_internal/openai-common.js';
 import type { CanonicalHttpRequest, EmbeddingBinding } from './types.js';
@@ -30,17 +31,7 @@ function buildRequest(
 }
 
 function parseEmbeddings(body: unknown, _headers: Record<string, string>): number[][] {
-  if (typeof body === 'string') {
-    try {
-      body = JSON.parse(body);
-    } catch (cause) {
-      throw new ResponseParseError({ message: 'openai-embeddings: body is not valid JSON', cause });
-    }
-  }
-  if (body === null || typeof body !== 'object') {
-    throw new ResponseParseError({ message: 'openai-embeddings: body is not an object' });
-  }
-  const obj = body as Record<string, unknown>;
+  const obj = coerceBodyToObject(body, 'openai-embeddings');
   const data = obj['data'];
   if (!Array.isArray(data) || data.length === 0) {
     throw new ResponseParseError({ message: 'openai-embeddings: missing data[]' });

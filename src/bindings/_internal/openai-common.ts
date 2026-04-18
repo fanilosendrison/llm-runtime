@@ -17,6 +17,25 @@ import type { RateLimitSnapshot } from '../../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../../types.js';
 import type { CanonicalHttpRequest, ParsedProviderResponse } from '../types.js';
 
+/**
+ * Coerce a response body to a Record<string, unknown>. Handles pre-parsed JSON
+ * (unknown from engine) or string fallback. Throws ResponseParseError if the body
+ * cannot be interpreted as a JSON object.
+ */
+export function coerceBodyToObject(body: unknown, label: string): Record<string, unknown> {
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (cause) {
+      throw new ResponseParseError({ message: `${label}: body is not valid JSON`, cause });
+    }
+  }
+  if (body === null || typeof body !== 'object') {
+    throw new ResponseParseError({ message: `${label}: body is not an object` });
+  }
+  return body as Record<string, unknown>;
+}
+
 export const OPENAI_TERMINATION_MAP: Readonly<Record<string, TerminationReason>> = Object.freeze({
   stop: 'completed',
   length: 'max_tokens',
@@ -51,17 +70,7 @@ export function buildOpenAILikeRequest(
 }
 
 export function parseOpenAILikeResponse(body: unknown): ParsedProviderResponse {
-  if (typeof body === 'string') {
-    try {
-      body = JSON.parse(body);
-    } catch (cause) {
-      throw new ResponseParseError({ message: 'openai: body is not valid JSON', cause });
-    }
-  }
-  if (body === null || typeof body !== 'object') {
-    throw new ResponseParseError({ message: 'openai: body is not an object' });
-  }
-  const obj = body as Record<string, unknown>;
+  const obj = coerceBodyToObject(body, 'openai');
   const choices = obj['choices'];
   if (!Array.isArray(choices) || choices.length === 0) {
     throw new ResponseParseError({ message: 'openai: missing or empty choices[]' });
