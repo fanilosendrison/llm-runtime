@@ -404,7 +404,7 @@ describe('executeEmbedding — (§20)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .embed(['a', 'b', 'c', 'd'], controlled.signal)
+        .embed(['a', 'b', 'c', 'd'], { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -442,7 +442,9 @@ describe('executeEmbedding — (§20)', () => {
         logging: { logger },
       });
       const controlled = createControlledSignal();
-      const promise = adapter.embed(['a', 'b', 'c', 'd'], controlled.signal).catch(() => undefined);
+      const promise = adapter
+        .embed(['a', 'b', 'c', 'd'], { signal: controlled.signal })
+        .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(15_000);
       await promise;

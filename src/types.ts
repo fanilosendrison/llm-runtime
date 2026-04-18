@@ -279,7 +279,7 @@ export interface AdapterConfig {
   readonly endpoint?: string;
   readonly retry?: RetryPolicy;
   readonly timeout?: TimeoutPolicy;
-  readonly sanitization?: SanitizationPolicy;
+  readonly sanitization: SanitizationPolicy;
   readonly integrity?: IntegrityPolicy;
   readonly logging?: LoggingPolicy;
   readonly providerOptions?: unknown;
@@ -306,7 +306,7 @@ export interface EmbeddingAdapter {
   readonly provider: ProviderLongId;
   readonly model: string;
   readonly stats: AdapterStats;
-  embed(texts: readonly string[], signal?: AbortSignal): Promise<number[][]>;
+  embed(texts: readonly string[], options?: { signal?: AbortSignal }): Promise<number[][]>;
 }
 
 // LLMErrorKind used by event types above. Re-export removed — index.ts exports

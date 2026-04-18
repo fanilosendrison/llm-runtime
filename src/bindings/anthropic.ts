@@ -5,7 +5,12 @@ import { classifyErrorBase } from '../services/error-classifier-base.js';
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
 import type { LLMRequest, LLMUsage, TerminationReason } from '../types.js';
 import { coerceBodyToObject, parseIntStr } from './_internal/openai-common.js';
-import type { BindingConfig, CanonicalHttpRequest, ParsedProviderResponse, ProviderBinding } from './types.js';
+import type {
+  BindingConfig,
+  CanonicalHttpRequest,
+  ParsedProviderResponse,
+  ProviderBinding,
+} from './types.js';
 
 const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
@@ -24,10 +29,7 @@ const TERMINATION_MAP: Readonly<Record<string, TerminationReason>> = Object.free
   tool_use: 'completed',
 });
 
-function buildRequest(
-  request: LLMRequest,
-  config: BindingConfig,
-): CanonicalHttpRequest {
+function buildRequest(request: LLMRequest, config: BindingConfig): CanonicalHttpRequest {
   const systemParts: string[] = [];
   const chatMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   for (const msg of request.messages) {

@@ -55,6 +55,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -174,6 +175,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -245,6 +247,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -359,6 +362,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -438,6 +442,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter.call({
@@ -473,6 +478,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter.call({
@@ -514,6 +520,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -580,6 +587,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -644,6 +652,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter.call({
@@ -677,6 +686,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       // First request: 429 then 200; snapshot becomes "unknown" after 429
@@ -719,6 +729,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter.call({
@@ -750,6 +761,7 @@ describe('executeCall — retry (§16)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: DEFAULT_RETRY,
+        sanitization: {},
         logging: { logger },
       });
       let caught: unknown;
@@ -788,6 +800,7 @@ describe('executeCall — retry (§16)', () => {
           model: 'claude-opus-4-6',
           apiKey: 'test-key',
           retry: DEFAULT_RETRY,
+          sanitization: {},
           logging: { logger },
         });
         await adapter.call(request);

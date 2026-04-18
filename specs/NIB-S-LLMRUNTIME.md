@@ -320,7 +320,10 @@ export interface EmbeddingAdapter {
   readonly provider: ProviderLongId;
   readonly model: string;
   readonly stats: AdapterStats;
-  embed(texts: readonly string[], signal?: AbortSignal): Promise<number[][]>;
+  embed(
+    texts: readonly string[],
+    options?: { signal?: AbortSignal },
+  ): Promise<number[][]>;
 }
 export interface AdapterStats {
   readonly totalCalls: number;
@@ -347,7 +350,7 @@ export interface AdapterConfig {
   endpoint?: string;
   retry?: RetryPolicy;
   timeout?: TimeoutPolicy;
-  sanitization?: SanitizationPolicy;
+  sanitization: SanitizationPolicy;
   integrity?: IntegrityPolicy;
   logging?: LoggingPolicy;
   providerOptions?: unknown;

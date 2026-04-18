@@ -45,6 +45,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       const request: LLMRequest = {
@@ -215,6 +216,7 @@ describe('executeCall — happy path (§15)', () => {
         model: 'deepseek-r1',
         apiKey: 'test-key',
         endpoint: 'https://api.deepseek.com/v1/chat/completions',
+        sanitization: {},
         logging: { logger },
       });
       const request: LLMRequest = {
@@ -327,6 +329,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       await adapter.call({
@@ -354,6 +357,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       const response = await adapter.call({
@@ -377,6 +381,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       const req: LLMRequest = { messages: [{ role: 'user', content: 'Hi' }] };
@@ -399,6 +404,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       const request = deepFreeze<LLMRequest>({
@@ -415,6 +421,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       const request: LLMRequest = {
@@ -453,6 +460,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createOpenAIAdapter({
         model: 'gpt-4o',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       const response = await adapter.call({
@@ -484,6 +492,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createGoogleAdapter({
         model: 'gemini-2.0-flash',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       const response = await adapter.call({
@@ -507,6 +516,7 @@ describe('executeCall — happy path (§15)', () => {
         const adapter = createAnthropicAdapter({
           model: 'claude-opus-4-6',
           apiKey: 'test-key',
+          sanitization: {},
           logging: { logger: createMockLogger() },
         });
         const req = deepFreeze<LLMRequest>({
@@ -537,6 +547,7 @@ describe('executeCall — happy path (§15)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       const seen = new Set<string>();

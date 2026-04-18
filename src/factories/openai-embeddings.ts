@@ -19,8 +19,11 @@ export function createOpenAIEmbeddingAdapter(config: EmbeddingAdapterConfig): Em
   const logger = resolveLogger(frozenConfig.logging);
   const stats = createStats();
 
-  async function embed(texts: readonly string[], signal?: AbortSignal): Promise<number[][]> {
-    const { embeddings, delta } = await executeEmbedding(texts, signal, {
+  async function embed(
+    texts: readonly string[],
+    options?: { signal?: AbortSignal },
+  ): Promise<number[][]> {
+    const { embeddings, delta } = await executeEmbedding(texts, options?.signal, {
       binding: openaiEmbeddingsBinding,
       config: frozenConfig,
       provider: 'openai',

@@ -71,6 +71,7 @@ describe('executeCall — integrity (§19)', () => {
           detectHeuristicTruncation: true,
           failOnSilentTruncation: false,
         },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
     }
@@ -117,6 +118,7 @@ describe('executeCall — integrity (§19)', () => {
           detectHeuristicTruncation: true,
           failOnSilentTruncation: true,
         },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
     }
@@ -149,6 +151,7 @@ describe('executeCall — integrity (§19)', () => {
           detectHeuristicTruncation: true,
           failOnSilentTruncation: true,
         },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       await adapter
@@ -176,6 +179,7 @@ describe('executeCall — integrity (§19)', () => {
           detectHeuristicTruncation: true,
           failOnSilentTruncation,
         },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
     }
@@ -231,6 +235,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         integrity: { failOnUnknownTermination: false },
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter };
@@ -280,6 +285,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         integrity: { failOnUnknownTermination: true },
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter };
@@ -340,6 +346,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'claude-opus-4',
         apiKey: 'test-key',
         integrity: { failOnModelMismatch: false },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       const response = await adapter.call({
@@ -368,6 +375,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'claude-opus-4',
         apiKey: 'test-key',
         integrity: { failOnModelMismatch: false },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       await expect(
@@ -397,6 +405,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'claude-opus-4',
         apiKey: 'test-key',
         integrity: { failOnModelMismatch: true },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       await expect(
@@ -414,6 +423,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'gpt-4o-mini', // not what the response returns
         apiKey: 'test-key',
         integrity: { failOnModelMismatch: true },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       let caught: unknown;
@@ -453,6 +463,7 @@ describe('executeCall — integrity (§19)', () => {
           failOnModelMismatch: true,
           modelMismatchPredicate: (req, res) => req !== res,
         },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       let caught: unknown;
@@ -489,6 +500,7 @@ describe('executeCall — integrity (§19)', () => {
           failOnModelMismatch: true,
           modelMismatchPredicate: (req, res) => !res.startsWith(req),
         },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
       await expect(
@@ -522,6 +534,7 @@ describe('executeCall — integrity (§19)', () => {
         model: 'gpt-4o',
         apiKey: 'test-key',
         integrity: { failOnModelMismatch },
+        sanitization: {},
         logging: { logger: createMockLogger() },
       });
     }
