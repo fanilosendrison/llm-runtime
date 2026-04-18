@@ -416,3 +416,11 @@ Items qui necessitent un arbitrage humain avant d'etre traduits en fix atomique.
   - why: legacy-blocked item migrated to design-queue via `migrate-blocked`. Was invisible to crush since 2026-04-17.
   - cta: decide — retry (move back to backlog.md without marker), drop (resolve via code + check off), or redefine scope (rewrite + move back).
 
+- [ ] [escalated] execute-call.ts exceeds 600 lines with multiple distinct responsibilities — src/engine/execute-call.ts (date: 2026-04-18, finding_id: 116f2cf1a7db4bcd)
+  - origin_severity: notable
+  - origin_id: c5e11b72e9729225
+  - skipped_count: 2
+  - escalated_on: 2026-04-18
+  - why: recurrent defensive skip by backlog-fix after 2 cycle(s). Likely cause: scope too large, spec ambiguity, or pending product decision.
+  - cta: examine manually. See `.claude/run/backlog-deep-crush/*/` for sub-agent skip reasons.
+
