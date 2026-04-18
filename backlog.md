@@ -34,5 +34,18 @@ Items atomiques derives de `spec-drift.json` (17 drifts detectes, 16 `drift_id` 
 - [ ] [notable] spec-drift[RetryDecision] — src/services/retry-resolver.ts <-> specs/NIB-S-LLMRUNTIME.md:564 — Discriminated union vs spec §6.7 flat (date: 2026-04-18, drift_id: df5f65a323416b5b)
 - [ ] [notable] spec-drift[ThrottleDecision] — src/services/throttle-resolver.ts <-> specs/NIB-S-LLMRUNTIME.md:564 — Discriminated union vs spec §6.7 flat (date: 2026-04-18, drift_id: f59f9759b6087605)
 
+### Senior-review findings (pre-existing, non-blocking)
+
+- [ ] [notable] executeEmbedding emits llm_embedding_batch event with durationMs:0 before the fetch, not after — src/engine/execute-embedding.ts:159 (date: 2026-04-18, finding_id: 2dbaec96dd48f0e9)
+- [ ] [minor] executeEmbedding allocates new AbortController per retry sleep instead of reusing NEVER_ABORTING_SIGNAL — src/engine/execute-embedding.ts:139 (date: 2026-04-18, finding_id: 9b79114f3e0b4ae3)
+- [ ] [minor] googleBinding parseResponse recreates FILTER_REASONS Set on every call — src/bindings/google.ts:99 (date: 2026-04-18, finding_id: 5934ec8cd729260d)
+- [ ] [minor] executeCall computes durationMs twice with separate clock.nowMono() calls producing slightly different values — src/engine/execute-call.ts:571 (date: 2026-04-18, finding_id: b0d0a6725d2e32b6)
+- [ ] [minor] executeCall invokes binding.buildRequest twice: once to extract the URL for the start event and once in the loop — src/engine/execute-call.ts:131 (date: 2026-04-18, finding_id: 26d1b3054bb02d8f)
+
+### Dedup-codebase findings (pre-existing, non-blocking)
+
+- [ ] [notable] execute-call.ts exceeds 600 lines with multiple distinct responsibilities — src/engine/execute-call.ts (date: 2026-04-18, finding_id: 116f2cf1a7db4bcd)
+- [ ] [minor] validateAdapterConfig and validateEmbeddingAdapterConfig duplicate retry and timeout validation logic — src/factories/validate-config.ts:12 (date: 2026-04-18, finding_id: 7bb2e5e0f7de57ad)
+- [ ] [minor] JSON body parsing guard pattern duplicated across anthropic.ts, google.ts, openai-common.ts, openai-embeddings.ts — src/bindings/anthropic.ts:73 (date: 2026-04-18, finding_id: e2a5b9b2a7d8c12f)
 
 
