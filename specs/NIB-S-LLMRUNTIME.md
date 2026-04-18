@@ -320,10 +320,7 @@ export interface EmbeddingAdapter {
   readonly provider: ProviderLongId;
   readonly model: string;
   readonly stats: AdapterStats;
-  embed(
-    texts: string[],
-    options?: { signal?: AbortSignal }
-  ): Promise<number[][]>;
+  embed(texts: readonly string[], signal?: AbortSignal): Promise<number[][]>;
 }
 export interface AdapterStats {
   readonly totalCalls: number;
@@ -348,15 +345,21 @@ export interface AdapterConfig {
   model: string;
   apiKey: string;
   endpoint?: string;
-  retry: RetryPolicy;
-  timeout: TimeoutPolicy;
-  sanitization: SanitizationPolicy;
-  integrity: IntegrityPolicy;
-  logging: LoggingPolicy;
+  retry?: RetryPolicy;
+  timeout?: TimeoutPolicy;
+  sanitization?: SanitizationPolicy;
+  integrity?: IntegrityPolicy;
+  logging?: LoggingPolicy;
   providerOptions?: unknown;
 }
-export interface EmbeddingAdapterConfig extends AdapterConfig {
+export interface EmbeddingAdapterConfig {
+  model: string;
+  apiKey: string;
+  endpoint?: string;
   batchSize?: number;           // default 100
+  retry?: RetryPolicy;
+  timeout?: TimeoutPolicy;
+  logging?: LoggingPolicy;
 }
 
 // Errors
@@ -402,16 +405,16 @@ export interface SanitizationPolicy {
 }
 
 export interface IntegrityPolicy {
-  detectHeuristicTruncation: boolean;      // default false (opt-in)
-  failOnSilentTruncation: boolean;         // default false (opt-in)
-  failOnUnknownTermination: boolean;       // default false (opt-in)
-  failOnModelMismatch: boolean;            // default false (opt-in)
+  detectHeuristicTruncation?: boolean;     // default false (opt-in)
+  failOnSilentTruncation?: boolean;        // default false (opt-in)
+  failOnUnknownTermination?: boolean;      // default false (opt-in)
+  failOnModelMismatch?: boolean;           // default false (opt-in)
   modelMismatchPredicate?: (requested: string, resolved: string) => boolean;
 }
 
 export interface LoggingPolicy {
   logger?: LLMLogger;
-  enabled: boolean;
+  enabled?: boolean;
 }
 ```
 
@@ -456,14 +459,15 @@ interface CanonicalHttpRequest {
   method: "POST";
   url: string;
   headers: Record<string, string>;
-  bodyKind: "json" | "empty";
-  bodyJson?: unknown;
+  bodyKind: "json";
+  bodyJson: Record<string, unknown>;
 }
 ```
 
 **Règles normatives** :
 - v1 : `method` fixé à `"POST"`. Extension future = breaking change.
-- v1 : `bodyKind ∈ {"json", "empty"}`. Multipart/binary hors scope v1.
+- v1 : `bodyKind` fixé à `"json"`. Multipart/binary/empty hors scope v1.
+- `bodyJson` est toujours présent et de type `Record<string, unknown>` — tout binding v1 produit un objet JSON.
 - L'engine (pas le binding) sérialise via `JSON.stringify(bodyJson)`. Unique point de sérialisation.
 - Le binding fournit **toujours** un objet JS pour `bodyJson`. **Jamais** une string pré-sérialisée.
 - L'ordre des propriétés de `bodyJson` n'a aucune sémantique contractuelle.
