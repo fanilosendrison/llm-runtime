@@ -44,7 +44,6 @@ Items atomiques derives de `spec-drift.json` (17 drifts detectes, 16 `drift_id` 
 
 ### Dedup-codebase findings (pre-existing, non-blocking)
 
-- [ ] [notable] execute-call.ts exceeds 600 lines with multiple distinct responsibilities — src/engine/execute-call.ts (date: 2026-04-18, finding_id: 116f2cf1a7db4bcd)
 - [x] [minor] validateAdapterConfig and validateEmbeddingAdapterConfig duplicate retry and timeout validation logic — src/factories/validate-config.ts:12 (date: 2026-04-18, finding_id: 7bb2e5e0f7de57ad)
 - [x] [minor] JSON body parsing guard pattern duplicated across anthropic.ts, google.ts, openai-common.ts, openai-embeddings.ts — src/bindings/anthropic.ts:73 (date: 2026-04-18, finding_id: e2a5b9b2a7d8c12f)
 
