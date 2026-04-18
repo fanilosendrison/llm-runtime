@@ -71,6 +71,7 @@ describe('executeCall — throttle (§17)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -142,6 +143,7 @@ describe('executeCall — throttle (§17)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       await adapter.call({ messages: [{ role: 'user', content: LONG_PROMPT }] });
@@ -156,6 +158,7 @@ describe('executeCall — throttle (§17)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       await adapter.call({ messages: [{ role: 'user', content: 'short' }] });
@@ -189,6 +192,7 @@ describe('executeCall — throttle (§17)', () => {
       const adapter = createGoogleAdapter({
         model: 'gemini-2.0-flash',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       for (let i = 0; i < 5; i += 1) {
@@ -234,6 +238,7 @@ describe('executeCall — throttle (§17)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -354,6 +359,7 @@ describe('executeCall — throttle (§17)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
 

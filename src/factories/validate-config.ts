@@ -2,7 +2,12 @@
 // Called at the top of every factory before any resource allocation.
 
 import { InvalidRequestError } from '../errors/index.js';
-import type { AdapterConfig, EmbeddingAdapterConfig, RetryPolicy, TimeoutPolicy } from '../types.js';
+import type {
+  AdapterConfig,
+  EmbeddingAdapterConfig,
+  RetryPolicy,
+  TimeoutPolicy,
+} from '../types.js';
 
 function validateRetryPolicy(retry: RetryPolicy | undefined, label: string): void {
   if (retry === undefined) return;

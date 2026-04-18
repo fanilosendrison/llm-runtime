@@ -64,6 +64,7 @@ function baseAdapterConfig(overrides: Partial<AdapterConfig> = {}): AdapterConfi
     apiKey: 'sk-test',
     retry: { maxAttempts: 1, backoffBaseMs: 1, maxBackoffMs: 5 },
     timeout: { perAttemptMs: 5_000 },
+    sanitization: {},
     ...overrides,
   };
 }

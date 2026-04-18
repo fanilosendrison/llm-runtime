@@ -92,6 +92,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter, fetchMock };
@@ -164,6 +165,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       return { logger, adapter };
@@ -292,6 +294,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
 
@@ -321,6 +324,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
 
@@ -347,6 +351,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
 
@@ -373,6 +378,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
 
@@ -421,6 +427,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
 
@@ -469,6 +476,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const adapter = createAnthropicAdapter({
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
+        sanitization: {},
         logging: { logger },
       });
       await adapter.call({ messages: [{ role: 'user', content: 'short' }] });
@@ -499,6 +507,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 100 },
+        sanitization: {},
         logging: { logger },
       });
       let caught: unknown;
@@ -525,6 +534,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 100 },
+        sanitization: {},
         logging: { logger },
       });
       let caught: unknown;
@@ -551,6 +561,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 100 },
+        sanitization: {},
         logging: { logger },
       });
       let caught: unknown;
@@ -579,6 +590,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 100 },
+        sanitization: {},
         logging: { logger },
       });
       let caught: unknown;
@@ -610,6 +622,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 200 },
+        sanitization: {},
         logging: { logger },
       });
       const controlled = createControlledSignal();
@@ -637,6 +650,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 200 },
+        sanitization: {},
         logging: { logger },
       });
       const controlled = createControlledSignal();
@@ -674,6 +688,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
           const adapter = createAnthropicAdapter({
             model: 'claude-opus-4-6',
             apiKey: 'test-key',
+            sanitization: {},
             logging: { logger },
           });
           await adapter.call({ messages: [{ role: 'user', content: `ok-${i}` }] });
@@ -686,6 +701,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
             model: 'claude-opus-4-6',
             apiKey: 'test-key',
             retry: { maxAttempts: 1, backoffBaseMs: 1000, maxBackoffMs: 60_000 },
+            sanitization: {},
             logging: { logger },
           });
           const controlled = createControlledSignal();
@@ -725,6 +741,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
         timeout: { perAttemptMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter.call({
@@ -766,6 +783,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter.call({
@@ -803,6 +821,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       let caught: unknown;
@@ -835,6 +854,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
         model: 'claude-opus-4-6',
         apiKey: 'test-key',
         retry: { maxAttempts: 5, backoffBaseMs: 2000, maxBackoffMs: 60_000 },
+        sanitization: {},
         logging: { logger },
       });
       const promise = adapter
