@@ -299,7 +299,7 @@ export interface ProviderAdapter {
   readonly provider: ProviderLongId;
   readonly model: string;
   readonly stats: AdapterStats;
-  call(request: LLMRequest, signal?: AbortSignal): Promise<LLMResponse>;
+  call(request: LLMRequest, options?: { signal?: AbortSignal }): Promise<LLMResponse>;
 }
 
 export interface EmbeddingAdapter {

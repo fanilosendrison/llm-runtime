@@ -252,7 +252,7 @@ describe('executeCall — throttle (§17)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -271,7 +271,7 @@ describe('executeCall — throttle (§17)', () => {
 
       const controlled = createControlledSignal();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, { signal: controlled.signal })
         .catch(() => undefined);
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
@@ -297,7 +297,7 @@ describe('executeCall — throttle (§17)', () => {
 
       const controlled = createControlledSignal();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: LONG_PROMPT }] }, { signal: controlled.signal })
         .catch(() => undefined);
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);

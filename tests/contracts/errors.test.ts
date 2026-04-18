@@ -232,7 +232,7 @@ describe('errors contracts', () => {
       ctrl.abort(new Error('pre-aborted'));
       const adapter = createAnthropicAdapter(baseConfig());
       try {
-        await adapter.call(SIMPLE_REQUEST, ctrl.signal);
+        await adapter.call(SIMPLE_REQUEST, { signal: ctrl.signal });
         throw new Error('expected throw');
       } catch (e) {
         expect(e).toBeInstanceOf(AbortedError);
@@ -263,7 +263,9 @@ describe('errors contracts', () => {
       // Abort fires during the retry sleep after attempt 1 (sleep = 1000ms,
       // starting at ~500ms mark). At that point attempt === 2 in the loop.
       ctrl.abortAfter(600, new Error('user cancel during sleep'));
-      const promise = adapter.call(SIMPLE_REQUEST, ctrl.signal).catch((e: unknown) => e);
+      const promise = adapter
+        .call(SIMPLE_REQUEST, { signal: ctrl.signal })
+        .catch((e: unknown) => e);
       // Advance past the abort time (600ms) to trigger the abort during retry sleep.
       await vi.advanceTimersByTimeAsync(700);
       const e = await promise;
@@ -326,7 +328,7 @@ describe('errors contracts', () => {
       ctrl.abort(customReason);
       const adapter = createAnthropicAdapter(baseConfig());
       try {
-        await adapter.call(SIMPLE_REQUEST, ctrl.signal);
+        await adapter.call(SIMPLE_REQUEST, { signal: ctrl.signal });
         throw new Error('expected throw');
       } catch (e) {
         expect(e).toBeInstanceOf(AbortedError);

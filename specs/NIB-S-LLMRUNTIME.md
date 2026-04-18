@@ -281,7 +281,6 @@ export interface LLMMessage {
 }
 export interface LLMRequest {
   readonly messages: readonly LLMMessage[];
-  signal?: AbortSignal;
   temperature?: number;
   maxTokens?: number;
   stopSequences?: readonly string[];
@@ -332,7 +331,10 @@ export interface ProviderAdapter {
   readonly provider: ProviderLongId;
   readonly model: string;
   readonly stats: AdapterStats;
-  call(request: LLMRequest): Promise<LLMResponse>;
+  call(
+    request: LLMRequest,
+    options?: { signal?: AbortSignal },
+  ): Promise<LLMResponse>;
 }
 export interface EmbeddingAdapter {
   readonly provider: ProviderLongId;

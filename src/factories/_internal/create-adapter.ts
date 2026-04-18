@@ -36,8 +36,11 @@ export function createCompletionAdapter(
   const stats = createStats();
   let snapshot: RateLimitSnapshot | null = null;
 
-  async function call(request: LLMRequest, signal?: AbortSignal): Promise<LLMResponse> {
-    const { response, delta } = await executeCall(request, signal, {
+  async function call(
+    request: LLMRequest,
+    options?: { signal?: AbortSignal },
+  ): Promise<LLMResponse> {
+    const { response, delta } = await executeCall(request, options?.signal, {
       binding,
       config: frozenConfig,
       provider,

@@ -104,7 +104,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       controller.abort();
       let caught: unknown;
       await adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controller.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -118,7 +118,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       controller.abort();
       let caught: unknown;
       await adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controller.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -131,7 +131,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controller = new AbortController();
       controller.abort();
       await adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controller.signal })
         .catch(() => undefined);
 
       expect(fetchMock.calls).toHaveLength(0);
@@ -142,7 +142,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controller = new AbortController();
       controller.abort();
       await adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controller.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controller.signal })
         .catch(() => undefined);
 
       eventAssertions.sequenceMatches(logger.events, ['llm_call_start', 'llm_call_end']);
@@ -177,7 +177,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -194,7 +194,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -214,7 +214,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const { logger, adapter } = setup();
       const controlled = createControlledSignal();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch(() => undefined);
       controlled.abortAfter(100);
       await vi.advanceTimersByTimeAsync(150);
@@ -236,7 +236,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -260,7 +260,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       });
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -301,7 +301,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -330,7 +330,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
 
       const controlled = createControlledSignal();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
@@ -357,7 +357,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
 
       const controlled = createControlledSignal();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
@@ -385,7 +385,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -437,7 +437,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: longPrompt }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: longPrompt }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -485,7 +485,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const longPrompt = 'word '.repeat(500);
       const controlled = createControlledSignal();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: longPrompt }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: longPrompt }] }, { signal: controlled.signal })
         .catch(() => undefined);
       controlled.abortAfter(500);
       await vi.advanceTimersByTimeAsync(700);
@@ -628,7 +628,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       const controlled = createControlledSignal();
       let caught: unknown;
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch((err: unknown) => {
           caught = err;
         });
@@ -657,7 +657,7 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
       let settledAt = -1;
       const start = Date.now();
       const promise = adapter
-        .call({ messages: [{ role: 'user', content: 'Hi' }] }, controlled.signal)
+        .call({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controlled.signal })
         .catch(() => {
           settledAt = Date.now() - start;
         });
@@ -706,7 +706,10 @@ describe('executeCall — abort / timeout / signal (§18)', () => {
           });
           const controlled = createControlledSignal();
           const promise = adapter
-            .call({ messages: [{ role: 'user', content: `abort-${i}` }] }, controlled.signal)
+            .call(
+              { messages: [{ role: 'user', content: `abort-${i}` }] },
+              { signal: controlled.signal },
+            )
             .catch(() => undefined);
           controlled.abortAfter(50);
           await vi.advanceTimersByTimeAsync(100);
