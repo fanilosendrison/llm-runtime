@@ -258,15 +258,15 @@ Chaque module consomme et produit des types canoniques. La coexistence de ces ty
 // Messages & request
 export type LLMRole = "system" | "user" | "assistant";
 export interface LLMMessage {
-  role: LLMRole;
-  content: string;
+  readonly role: LLMRole;
+  readonly content: string;
 }
 export interface LLMRequest {
-  messages: LLMMessage[];
+  readonly messages: readonly LLMMessage[];
   signal?: AbortSignal;
   temperature?: number;
   maxTokens?: number;
-  stopSequences?: string[];
+  stopSequences?: readonly string[];
 }
 
 // Response
@@ -530,9 +530,9 @@ Utilisé par les deux types de bindings (`ProviderBinding` et `EmbeddingBinding`
 interface ProviderBinding {
   provider: ProviderLongId;
   buildRequest(request: LLMRequest, config: BindingConfig): CanonicalHttpRequest;
-  parseResponse(httpBody: string, httpHeaders: Record<string, string>): ParsedProviderResponse;
+  parseResponse(body: unknown, headers: Record<string, string>): ParsedProviderResponse;
   classifyError(signal: ProviderErrorSignal): LLMRuntimeError;
-  readRateLimitHeaders(httpHeaders: Record<string, string>): RateLimitSnapshot | null;
+  readRateLimitHeaders(headers: Record<string, string>, nowMono: number, nowWall: Date): RateLimitSnapshot | null;
   terminationMap: Readonly<Record<string, TerminationReason>>;
   quirks: ProviderQuirks;
 }
@@ -549,10 +549,10 @@ interface ProviderQuirks {
 ```ts
 interface EmbeddingBinding {
   provider: ProviderLongId;
-  buildRequest(texts: string[], config: BindingConfig): CanonicalHttpRequest;
-  parseEmbeddings(httpBody: string): number[][];
+  buildRequest(texts: readonly string[], config: BindingConfig): CanonicalHttpRequest;
+  parseEmbeddings(body: unknown, headers: Record<string, string>): number[][];
   classifyError(signal: ProviderErrorSignal): LLMRuntimeError;
-  readRateLimitHeaders(httpHeaders: Record<string, string>): RateLimitSnapshot | null;
+  readRateLimitHeaders(headers: Record<string, string>, nowMono: number, nowWall: Date): RateLimitSnapshot | null;
   quirks: Pick<ProviderQuirks, "hasRateLimitHeaders">;
 }
 ```
@@ -562,11 +562,9 @@ interface EmbeddingBinding {
 ### 6.7 Types de décisions matérialisées
 
 ```ts
-interface RetryDecision {
-  retry: boolean;
-  delayMs?: number;
-  reason: string;
-}
+type RetryDecision =
+  | { readonly retry: false; readonly reason: RetryDecisionReason }
+  | { readonly retry: true; readonly delayMs: number; readonly reason: RetryDecisionReason };
 
 interface RateLimitSnapshot {
   remainingTokens: number;
@@ -575,11 +573,9 @@ interface RateLimitSnapshot {
   state: "known" | "partial" | "unknown";
 }
 
-interface ThrottleDecision {
-  throttle: boolean;
-  waitMs?: number;
-  reason: string;
-}
+type ThrottleDecision =
+  | { readonly throttle: false; readonly reason: ThrottleDecisionReason }
+  | { readonly throttle: true; readonly waitMs: number; readonly reason: ThrottleDecisionReason };
 ```
 
 ---

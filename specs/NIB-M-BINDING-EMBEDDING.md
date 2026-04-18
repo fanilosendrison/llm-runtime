@@ -40,20 +40,20 @@ Cette séparation des interfaces (`ProviderBinding` vs `EmbeddingBinding`) est u
 ```ts
 interface EmbeddingBinding {
   readonly provider: ProviderLongId;
-  buildRequest(texts: string[], config: BindingConfig): CanonicalHttpRequest;
-  parseEmbeddings(httpBody: string): number[][];
+  buildRequest(texts: readonly string[], config: BindingConfig): CanonicalHttpRequest;
+  parseEmbeddings(body: unknown, headers: Record<string, string>): number[][];
   classifyError(signal: ProviderErrorSignal): LLMRuntimeError;
-  readRateLimitHeaders(httpHeaders: Record<string, string>): RateLimitSnapshot | null;
+  readRateLimitHeaders(headers: Record<string, string>, nowMono: number, nowWall: Date): RateLimitSnapshot | null;
   readonly quirks: Pick<ProviderQuirks, "hasRateLimitHeaders">;
 }
 ```
 
 ### 2.2 Contrats de surface
 
-- `buildRequest` : **pure**. Reçoit `texts: string[]` (ordre significatif — la sortie doit respecter cet ordre) et `config: BindingConfig`. Retourne un `CanonicalHttpRequest`.
-- `parseEmbeddings` : **pure**. Reçoit **uniquement** le body (pas les headers — contrairement à `parseResponse` pour completion). Retourne `number[][]` strictement aligné sur l'ordre des `texts` d'entrée. Throw `ResponseParseError` si le body est malformé.
+- `buildRequest` : **pure**. Reçoit `texts: readonly string[]` (ordre significatif — la sortie doit respecter cet ordre) et `config: BindingConfig`. Retourne un `CanonicalHttpRequest`.
+- `parseEmbeddings` : **pure**. Reçoit le body pré-parsé (`unknown`, JSON parsing centralisé par l'engine) et les headers. Retourne `number[][]` strictement aligné sur l'ordre des `texts` d'entrée. Throw `ResponseParseError` si le body est malformé.
 - `classifyError` : pure. Mêmes règles qu'un binding completion (voir NIB-M-BINDINGS-COMPLETION §2).
-- `readRateLimitHeaders` : pure (modulo `clock`). Même contrat que les bindings completion.
+- `readRateLimitHeaders` : pure (modulo `clock`). Reçoit les headers HTTP, `nowMono` (monotone ms) et `nowWall` (Date) pour la conversion wall→monotone des timestamps de reset. Même contrat que les bindings completion.
 - `quirks` : objet figé avec un **seul** champ (`hasRateLimitHeaders`). Pas de `defaultSanitization` ni `mayRouteModel` ni `terminationMap`.
 
 ---

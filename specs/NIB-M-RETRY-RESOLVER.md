@@ -48,12 +48,12 @@ Les deux fonctions sont hébergées dans le **même fichier** `src/services/retr
 - Type `RetryDecision` (forme canonique interne — pas exporté).
 
 ```ts
-interface RetryDecision {
-  retry: boolean;
-  delayMs?: number;
-  reason: string;
-}
+type RetryDecision =
+  | { readonly retry: false; readonly reason: RetryDecisionReason }
+  | { readonly retry: true; readonly delayMs: number; readonly reason: RetryDecisionReason };
 ```
+
+Discriminated union : `delayMs` est garanti présent uniquement quand `retry === true`. Le consommateur bénéficie du narrowing TypeScript natif sans assertion.
 
 ### 2.3 Consommateurs
 

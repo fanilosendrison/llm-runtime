@@ -44,9 +44,9 @@ Tous les bindings completion implémentent strictement :
 interface ProviderBinding {
   readonly provider: ProviderLongId;
   buildRequest(request: LLMRequest, config: BindingConfig): CanonicalHttpRequest;
-  parseResponse(httpBody: string, httpHeaders: Record<string, string>): ParsedProviderResponse;
+  parseResponse(body: unknown, headers: Record<string, string>): ParsedProviderResponse;
   classifyError(signal: ProviderErrorSignal): LLMRuntimeError;
-  readRateLimitHeaders(httpHeaders: Record<string, string>): RateLimitSnapshot | null;
+  readRateLimitHeaders(headers: Record<string, string>, nowMono: number, nowWall: Date): RateLimitSnapshot | null;
   readonly terminationMap: Readonly<Record<string, TerminationReason>>;
   readonly quirks: ProviderQuirks;
 }
@@ -67,9 +67,9 @@ interface ProviderQuirks {
 
 **Contrats partagés** :
 - `buildRequest` : **pur**, déterministe pour une entrée donnée. Aucun I/O. Produit un objet `CanonicalHttpRequest` (voir NIB-S §6.1) sérialisable et loggable (sans secrets : les `apiKey` sont incorporées dans `headers` selon le provider mais ne sont **pas** masquées par le binding — le masquage des logs est responsabilité du logger si nécessaire).
-- `parseResponse` : **pur**, reçoit `(bodyText, headers)` où `headers` est déjà normalisé en `Record<string, string>` avec clés lowercase (voir §14.1 step 7.i NX). Throw uniquement `ResponseParseError` en cas de body non-JSON ou structure inattendue (pas de `new Error(...)` générique).
+- `parseResponse` : **pur**, reçoit `(body, headers)` où `body` est le JSON pré-parsé par l'engine (`unknown` — le parsing JSON est centralisé dans l'engine, pas dans le binding) et `headers` est déjà normalisé en `Record<string, string>` avec clés lowercase (voir §14.1 step 7.i NX). Throw uniquement `ResponseParseError` en cas de structure inattendue (pas de `new Error(...)` générique).
 - `classifyError` : **pur**, input `ProviderErrorSignal` (§7.3 NX), output une instance d'une des 11 sous-classes de `LLMRuntimeError` (voir NIB-M-ERRORS). Aucun appel à `error-classifier-base` depuis le binding : le binding peut dupliquer la logique HTTP générique si elle suffit, ou l'appeler explicitement via import — jamais de mécanisme d'héritage ou de délégation implicite.
-- `readRateLimitHeaders` : **pur**, retourne un `RateLimitSnapshot` (NIB-S §10.2) ou `null`. Ne throw **jamais** — tout header absent, malformé, ou provider sans rate-limit → `null`.
+- `readRateLimitHeaders` : **pur** (modulo clock args), reçoit `(headers, nowMono, nowWall)` pour permettre la conversion wall-clock→monotone des timestamps de reset. Retourne un `RateLimitSnapshot` (NIB-S §10.2) ou `null`. Ne throw **jamais** — tout header absent, malformé, ou provider sans rate-limit → `null`.
 - `terminationMap` : objet figé (`Readonly<...>`). Les clés sont les `finishReason` bruts du provider, les valeurs sont des `TerminationReason` canoniques. Toute clé absente de la map est résolue par l'engine via mapping à `"unknown"` et déclenche éventuellement `SilentTruncationError` selon la policy integrity.
 - `quirks` : objet figé. Les 3 champs sont tous obligatoires et de type non optionnel.
 

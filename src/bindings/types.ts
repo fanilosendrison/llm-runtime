@@ -29,7 +29,7 @@ export interface BindingConfig {
   readonly model: string;
   readonly apiKey: string;
   readonly endpoint?: string;
-  readonly providerOptions?: Record<string, unknown>;
+  readonly providerOptions?: unknown;
 }
 
 export interface DefaultSanitization {
@@ -67,6 +67,7 @@ export interface ProviderBinding {
 }
 
 export interface EmbeddingBinding {
+  readonly provider: ProviderLongId;
   readonly buildRequest: (texts: readonly string[], config: BindingConfig) => CanonicalHttpRequest;
   readonly parseEmbeddings: (body: unknown, headers: Record<string, string>) => number[][];
   readonly classifyError: (signal: ProviderErrorSignal) => LLMRuntimeError;
