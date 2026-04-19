@@ -83,9 +83,5 @@ CLAUDE.md
 .index-state.json
 .claude/run/
 
-# ---------- nightly-clean enrollment ----------
-.claude/*
-!.claude/routine-setup.sh
-!.claude/nightly-clean-run.sh
-!.claude/agents/
-!.claude/agents/**
+# ---------- Claude Code local state (nightly-clean uses GHA, clones dotclaude at runtime) ----------
+.claude/
