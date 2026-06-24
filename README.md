@@ -30,6 +30,8 @@ npm install @fanilosendrison/llm-runtime
 pnpm add @fanilosendrison/llm-runtime
 ```
 
+> **ESM only** — this package is pure ESM. Your project needs `"type": "module"` in `package.json` or you must use `.mjs` / `.mts` extensions.
+
 ### Your first call
 
 ```typescript
