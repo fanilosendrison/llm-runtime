@@ -1,4 +1,4 @@
-# Contributing to @vegacorp/llm-runtime
+# Contributing to @fanilosendrison/llm-runtime
 
 Thanks for your interest in contributing! Here's how to get started.
 
