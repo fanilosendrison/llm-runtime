@@ -1,5 +1,5 @@
 {
-  "name": "@vegacorp/llm-runtime",
+  "name": "@cubits/llm-runtime",
   "version": "0.1.0",
   "description": "Runtime TypeScript pour orchestration de providers LLM (completion + embedding) — moteur unique normalisé pour Anthropic, OpenAI, OpenAI-compatible, Google Gemini.",
   "type": "module",
