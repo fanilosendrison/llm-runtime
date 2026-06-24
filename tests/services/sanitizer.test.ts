@@ -253,7 +253,7 @@ describe('sanitizer', () => {
       for (let i = 0; i < 20; i += 1) {
         const useFence = rng.randomBool();
         const body = rng.randomString(20);
-        const s = useFence ? '```json\n' + body + '\n```' : body;
+        const s = useFence ? `\`\`\`json\n${body}\n\`\`\`` : body;
         const once = stripJsonFence(s).content;
         const twice = stripJsonFence(once).content;
         expect(twice).toEqual(once);

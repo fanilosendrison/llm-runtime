@@ -77,8 +77,7 @@ function resolveSanitization(
 ): { stripThinkingTags: boolean; stripJsonFence: boolean } {
   return {
     stripThinkingTags:
-      config.sanitization.stripThinkingTags ??
-      binding.quirks.defaultSanitization.stripThinkingTags,
+      config.sanitization.stripThinkingTags ?? binding.quirks.defaultSanitization.stripThinkingTags,
     stripJsonFence:
       config.sanitization.stripJsonFence ?? binding.quirks.defaultSanitization.stripJsonFence,
   };
