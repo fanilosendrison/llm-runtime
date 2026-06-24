@@ -1,4 +1,4 @@
-# @vegacorp/llm-runtime
+# @fanilosendrison/llm-runtime
 
 > TypeScript runtime for LLM provider orchestration — one normalized engine for Anthropic, OpenAI, Google Gemini, and any OpenAI-compatible provider.
 
@@ -24,15 +24,15 @@
 ### Install
 
 ```bash
-npm install @vegacorp/llm-runtime
+npm install @fanilosendrison/llm-runtime
 # or
-pnpm add @vegacorp/llm-runtime
+pnpm add @fanilosendrison/llm-runtime
 ```
 
 ### Basic Completion
 
 ```typescript
-import { createAnthropicAdapter, buildSimplePrompt } from '@vegacorp/llm-runtime';
+import { createAnthropicAdapter, buildSimplePrompt } from '@fanilosendrison/llm-runtime';
 
 const adapter = createAnthropicAdapter({
   model: 'claude-sonnet-4-20250514',
@@ -59,7 +59,7 @@ console.log(adapter.stats);           // { totalCalls: 1, totalInputTokens: 25, 
 ### OpenAI
 
 ```typescript
-import { createOpenAIAdapter } from '@vegacorp/llm-runtime';
+import { createOpenAIAdapter } from '@fanilosendrison/llm-runtime';
 
 const adapter = createOpenAIAdapter({
   model: 'gpt-4o',
@@ -78,7 +78,7 @@ const response = await adapter.call({
 ### Google Gemini
 
 ```typescript
-import { createGoogleAdapter } from '@vegacorp/llm-runtime';
+import { createGoogleAdapter } from '@fanilosendrison/llm-runtime';
 
 const adapter = createGoogleAdapter({
   model: 'gemini-2.5-flash',
@@ -92,7 +92,7 @@ const adapter = createGoogleAdapter({
 Works with DeepSeek, Mistral, Groq, Together, and Ollama:
 
 ```typescript
-import { createOpenAICompatibleAdapter } from '@vegacorp/llm-runtime';
+import { createOpenAICompatibleAdapter } from '@fanilosendrison/llm-runtime';
 
 const adapter = createOpenAICompatibleAdapter({
   provider: 'deepseek',  // 'mistral' | 'groq' | 'together' | 'ollama'
@@ -106,7 +106,7 @@ const adapter = createOpenAICompatibleAdapter({
 ### Embeddings
 
 ```typescript
-import { createOpenAIEmbeddingAdapter } from '@vegacorp/llm-runtime';
+import { createOpenAIEmbeddingAdapter } from '@fanilosendrison/llm-runtime';
 
 const embedder = createOpenAIEmbeddingAdapter({
   model: 'text-embedding-3-small',
@@ -170,7 +170,7 @@ import {
   RateLimitError,
   TimeoutError,
   InvalidRequestError,
-} from '@vegacorp/llm-runtime';
+} from '@fanilosendrison/llm-runtime';
 
 try {
   const response = await adapter.call(request);
@@ -222,7 +222,7 @@ try {
 Plug in a logger to capture structured events:
 
 ```typescript
-import type { LLMEvent, LLMLogger } from '@vegacorp/llm-runtime';
+import type { LLMEvent, LLMLogger } from '@fanilosendrison/llm-runtime';
 
 const logger: LLMLogger = {
   emit(event: LLMEvent) {
