@@ -41,7 +41,7 @@
     "vitest": "^3.2.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild"]
@@ -55,6 +55,5 @@
     "embedding",
     "runtime"
   ],
-  "license": "UNLICENSED",
-  "private": true
+  "license": "MIT"
 }
