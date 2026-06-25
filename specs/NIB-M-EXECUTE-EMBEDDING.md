@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-EXECUTE-EMBEDDING — Module Brief — `executeEmbedding` (moteur d'orchestration embedding)
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §14.2 (flux embedding), §5.3, §6.4 (EmbeddingAdapter), §9.1 (EmbeddingAdapterConfig)
 **NIB-T associé** : §20
 

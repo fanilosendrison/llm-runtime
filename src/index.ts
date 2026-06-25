@@ -1,4 +1,4 @@
-// @vegacorp/llm-runtime — public surface (NIB-T §26.1 C-GL-01).
+// @fanilosendrison/llm-runtime — public surface (NIB-T §26.1 C-GL-01).
 // C-GL-02 lists internals NOT to re-export: executeCall, executeEmbedding,
 // CanonicalHttpRequest, ParsedProviderResponse, ProviderErrorSignal,
 // RateLimitSnapshot, ProviderBinding, EmbeddingBinding, ProviderQuirks, clock, ulid.

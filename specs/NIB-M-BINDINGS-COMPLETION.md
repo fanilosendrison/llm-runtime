@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-BINDINGS-COMPLETION — Module Brief — Bindings de completion (Anthropic, OpenAI, OpenAI-compatible, Google Gemini)
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.4 (ProviderBinding), §15.1 (quirks génériques), §15.2 (Anthropic), §15.3 (OpenAI et compatibles), §15.4 (Google Gemini)
 **NIB-T associé** : §10 (Anthropic), §11 (OpenAI), §12 (OpenAI-compatible), §13 (Google)
 

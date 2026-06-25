@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-THROTTLE — Module Brief — `resolveThrottleDecision` et `throttle-snapshot`
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (throttle-resolver + throttle-snapshot), §10.2 (ThrottleDecision, RateLimitSnapshot), §13.3 (état par adapter)
 **NIB-T associé** : §4 (throttle-resolver), §5 (throttle-snapshot stateful)
 

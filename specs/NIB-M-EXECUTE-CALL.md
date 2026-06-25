@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-EXECUTE-CALL — Module Brief — `executeCall` (moteur d'orchestration completion)
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §14.1 (flux end-to-end), §5.3 (Execution Engine), §10 (décisions matérialisées), §11 (observabilité), §13 (signaux), §14.1 (28 sous-étapes détaillées)
 **NIB-T associé** : §15 (happy path), §16 (retry), §17 (throttle), §18 (abort/timeout), §19 (integrity)
 
@@ -19,7 +19,7 @@ superseded_by: []
 
 ## 1. Purpose
 
-`executeCall` est le **point unique d'exécution** d'un call completion dans `@vegacorp/llm-runtime`. Son rôle : orchestrer le flux complet depuis la réception d'une `LLMRequest` jusqu'au retour d'une `LLMResponse` matérialisée et observable.
+`executeCall` est le **point unique d'exécution** d'un call completion dans `@fanilosendrison/llm-runtime`. Son rôle : orchestrer le flux complet depuis la réception d'une `LLMRequest` jusqu'au retour d'une `LLMResponse` matérialisée et observable.
 
 **Principe normatif structurant — "moteur unique, bindings minces" (I-2 du NIB-S)** : toute décision opérationnelle (retry, throttle, timeout, signal composition, sanitization, integrity, enrichissement d'erreur, émission d'events) est matérialisée dans `executeCall`. Les bindings ne font que traduire ; l'engine seul orchestre.
 

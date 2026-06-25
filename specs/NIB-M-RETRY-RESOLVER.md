@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-RETRY-RESOLVER — Module Brief — `resolveRetryDecision` et `parseRetryAfter`
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (retry-resolver + parseRetryAfter), §10.1 (RetryDecision, table), §9.2 (RetryPolicy)
 **NIB-T associé** : §2 (retry-resolver), §3 (parseRetryAfter)
 

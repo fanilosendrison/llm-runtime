@@ -1,4 +1,4 @@
-// Public types for @vegacorp/llm-runtime (shapes inferred from NIB-T-LLMRUNTIME).
+// Public types for @fanilosendrison/llm-runtime (shapes inferred from NIB-T-LLMRUNTIME).
 // Stubs only — no logic. GREEN will refine against NIB-S §5/§6.
 
 // ───────────────────────── Roles & Messages ─────────────────────────

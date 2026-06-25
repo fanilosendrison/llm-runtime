@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-SIGNAL-COMPOSER — Module Brief — `composeSignal` et `abortableSleep`
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (signal-composer), §13.2 (signaux — priorité externe sur interne, propagation abort sur sleeps)
 **NIB-T associé** : §8 (signal-composer), §23 (contract invariants — signaux)
 

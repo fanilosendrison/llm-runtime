@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-ERROR-CLASSIFIER-BASE — Module Brief — Classifier HTTP générique
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (error-classifier-base), §8.3 (mapping HTTP → erreur), §8.4 (override par binding)
 **NIB-T associé** : §9 (error-classifier-base)
 

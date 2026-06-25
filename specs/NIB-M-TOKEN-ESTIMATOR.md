@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-TOKEN-ESTIMATOR — Module Brief — `estimateCallTokens`
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (token-estimator), §13.5 (estimation grossière)
 **NIB-T associé** : §2.5 (T-TE-01..04) si présent dans le NIB-T
 

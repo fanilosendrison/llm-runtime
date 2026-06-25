@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-SANITIZER — Module Brief — `sanitizeContent` et détection heuristique
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (sanitizer), §7 (LLMResponse), §11.5 (event llm_call_sanitized)
 **NIB-T associé** : §7 (sanitizer)
 **DC associé** : **DC-AI-JSON-SAFE-PARSE** (dépendance `ai-json-safe-parse ^0.3.0`)

@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-FACTORIES — Module Brief — Factories publiques, helper `buildSimplePrompt`, et surface `index.ts`
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §4.8 (config figée), §4.9 (surface publique), §5.2 (Layer 1 — Public API), §5.3 (factories), §5.4 (bindings), §10.1 (cycle de vie adapter)
 **NIB-T associé** : §26 (tests transverses surface publique + factories + fail-closed)
 
@@ -19,7 +19,7 @@ superseded_by: []
 
 ## 1. Purpose
 
-Ce module couvre **la couche L1 publique** de `@vegacorp/llm-runtime` : les cinq factories qui câblent binding + config + services transverses en un adapter immutable, le helper périphérique `buildSimplePrompt`, et la surface exportée depuis `index.ts`.
+Ce module couvre **la couche L1 publique** de `@fanilosendrison/llm-runtime` : les cinq factories qui câblent binding + config + services transverses en un adapter immutable, le helper périphérique `buildSimplePrompt`, et la surface exportée depuis `index.ts`.
 
 **Principe normatif structurant — "configuration figée au moment de la factory" (I-8 du NIB-S)** : chaque factory prend une `AdapterConfig` (ou `EmbeddingAdapterConfig`), valide ses invariants, câble le binding correspondant, instancie les services locaux à l'adapter (throttle-snapshot, stats, logger), et retourne un `ProviderAdapter` (ou `EmbeddingAdapter`) **immutable**. Toute mutation post-création du config source ne doit pas affecter le comportement de l'adapter (snapshot défensif exigé).
 
@@ -481,7 +481,7 @@ export function buildSimplePrompt(params: {
 ### 5.4 Use case type
 
 ```ts
-import { buildSimplePrompt, createAnthropicAdapter } from "@vegacorp/llm-runtime";
+import { buildSimplePrompt, createAnthropicAdapter } from "@fanilosendrison/llm-runtime";
 
 const adapter = createAnthropicAdapter({ /* ... */ });
 
@@ -614,7 +614,7 @@ Les symboles suivants **ne sont pas** exportés. Toute tentative d'`import` depu
 ### 7.1 Happy path Anthropic
 
 ```ts
-import { createAnthropicAdapter, buildSimplePrompt } from "@vegacorp/llm-runtime";
+import { createAnthropicAdapter, buildSimplePrompt } from "@fanilosendrison/llm-runtime";
 
 const adapter = createAnthropicAdapter({
   model: "claude-3-5-sonnet-20240620",
@@ -832,7 +832,7 @@ Aucune contrainte d'ordonnancement côté factory. Chaque call crée son propre 
 ### 9.1 Non-exports interdits
 
 - Aucun des 16 symboles listés en §6.3 ne doit être exporté depuis `src/index.ts`.
-- **Enforcement par test automatisé** : `C-GL-02` du NIB-T liste les symboles interdits. Le test vérifie que `import { symbol } from "@vegacorp/llm-runtime"` échoue à la compilation pour chacun.
+- **Enforcement par test automatisé** : `C-GL-02` du NIB-T liste les symboles interdits. Le test vérifie que `import { symbol } from "@fanilosendrison/llm-runtime"` échoue à la compilation pour chacun.
 
 ### 9.2 Pas de state partagé inter-factories
 
@@ -916,7 +916,7 @@ import {
   buildSimplePrompt,
   InvalidRequestError,
   isRetriableKind,
-} from "@vegacorp/llm-runtime";
+} from "@fanilosendrison/llm-runtime";
 
 const llm = createAnthropicAdapter({
   model: "claude-3-5-sonnet-20240620",

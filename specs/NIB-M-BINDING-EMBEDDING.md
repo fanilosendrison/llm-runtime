@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-BINDING-EMBEDDING — Module Brief — Binding d'embedding (OpenAI Embeddings v1)
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.4 (EmbeddingBinding), §15.5 (OpenAI Embeddings spécifiques), §6.4 (EmbeddingAdapter)
 **NIB-T associé** : §14
 

@@ -13,7 +13,7 @@ superseded_by: []
 
 # DC-AI-JSON-SAFE-PARSE — Dependency Contract — `ai-json-safe-parse`
 
-**Package consommateur** : `@vegacorp/llm-runtime`
+**Package consommateur** : `@fanilosendrison/llm-runtime`
 **Dépendance** : `ai-json-safe-parse@^0.3.0`
 **Module consommateur unique** : `src/services/sanitizer.ts` (voir NIB-M-SANITIZER §3.5)
 
@@ -21,7 +21,7 @@ superseded_by: []
 
 ## 1. Purpose du contrat
 
-Ce document formalise le **contrat attendu** entre `@vegacorp/llm-runtime` et la dépendance externe `ai-json-safe-parse`. Il vise à :
+Ce document formalise le **contrat attendu** entre `@fanilosendrison/llm-runtime` et la dépendance externe `ai-json-safe-parse`. Il vise à :
 
 1. **Isoler** le runtime de la surface réelle de la lib (qui peut évoluer) en formalisant le sous-ensemble utilisé.
 2. **Tester** le contrat via des tests dédiés qui fonctionnent comme un "capteur" : si une upgrade de `ai-json-safe-parse` casse notre usage, les tests DC lâchent avant ceux du sanitizer.
@@ -276,7 +276,7 @@ Si un test DC lâche après une upgrade de la lib :
 ## 7. Diagramme de dépendance
 
 ```
-@vegacorp/llm-runtime
+@fanilosendrison/llm-runtime
        │
        └── src/services/sanitizer.ts
                   │

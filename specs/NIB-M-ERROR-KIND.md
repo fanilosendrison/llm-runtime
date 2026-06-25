@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-ERROR-KIND — Module Brief — `LLMErrorKind` et `isRetriableKind`
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §8.4 (Types et helpers d'erreur exportables)
 **NIB-T associé** : §6 (Tests de `isRetriableKind`)
 
@@ -128,7 +128,7 @@ export const isRetriableKind = (kind: LLMErrorKind): boolean =>
 ### 4.1 Usage du consommateur final
 
 ```ts
-import { isRetriableKind, LLMRuntimeError } from "@vegacorp/llm-runtime";
+import { isRetriableKind, LLMRuntimeError } from "@fanilosendrison/llm-runtime";
 
 try {
   await adapter.call(request);

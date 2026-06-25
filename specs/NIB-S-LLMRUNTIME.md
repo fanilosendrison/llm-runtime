@@ -10,7 +10,7 @@ superseded_by: []
 
 # NIB-S-LLMRUNTIME — System Brief
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Statut** : v1.0 — éclatement NIB actif, consommable par Claude Code
 **Source NX** : `NX-LLMRUNTIME v0.13`
 
@@ -18,7 +18,7 @@ superseded_by: []
 
 ## 0. Préambule
 
-Ce document est le **System Brief** de `@vegacorp/llm-runtime`. Il établit le frame dans lequel tous les NIB-M et Dependency Contracts associés opèrent. Il définit :
+Ce document est le **System Brief** de `@fanilosendrison/llm-runtime`. Il établit le frame dans lequel tous les NIB-M et Dependency Contracts associés opèrent. Il définit :
 
 - L'objectif système et la frontière v1
 - L'architecture en 4 couches et la liste exhaustive des modules
@@ -37,7 +37,7 @@ Il ne décrit **pas** les algorithmes internes des modules — ceux-là sont dé
 
 Les systèmes VegaCorp qui font des appels LLM (`md-structural-normalizer`, `key-concepts-extractor`, et chaque nouveau module du pipeline de revue littéraire automatisée) réimplémentent de manière divergente la couche bas niveau d'appel aux providers LLM. Résultat : ~1000+ LOC de logique quasi-identique dupliquée, incohérences de comportement entre systèmes, taxonomies d'erreur incompatibles, observabilité fragmentée, coût de maintenance croissant.
 
-### 1.2 Réponse `@vegacorp/llm-runtime`
+### 1.2 Réponse `@fanilosendrison/llm-runtime`
 
 Un package infrastructure transversal qui fournit un moteur d'exécution normalisée de requêtes LLM. Chaque call traverse un moteur déterministe avec des décisions matérialisées (retry, throttle, termination) — pas juste un wrapper fonctionnel autour de `fetch`.
 

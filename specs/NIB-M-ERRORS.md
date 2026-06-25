@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-ERRORS — Module Brief — Taxonomie d'erreurs sémantiques
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §8 (Taxonomie d'erreurs sémantiques)
 **NIB-T associé** : §21 (Contract invariants — taxonomie d'erreurs)
 
@@ -19,7 +19,7 @@ superseded_by: []
 
 ## 1. Purpose
 
-Ce module définit l'intégralité de la taxonomie d'erreurs exportée publiquement par `@vegacorp/llm-runtime`. Il matérialise le contrat stable que les consommateurs utilisent pour discriminer et traiter les échecs d'appels LLM (`instanceof RateLimitError`, `error.kind === "rate_limit"`, `isRetriableKind(error.kind)`).
+Ce module définit l'intégralité de la taxonomie d'erreurs exportée publiquement par `@fanilosendrison/llm-runtime`. Il matérialise le contrat stable que les consommateurs utilisent pour discriminer et traiter les échecs d'appels LLM (`instanceof RateLimitError`, `error.kind === "rate_limit"`, `isRetriableKind(error.kind)`).
 
 La taxonomie est fermée (11 sous-classes concrètes + 1 classe abstraite parente) et chaque sous-classe correspond à une situation d'échec distincte avec une politique de retry claire (voir NIB-M-RETRY-RESOLVER).
 
@@ -521,7 +521,7 @@ throw enrichError(lastError, { provider, model, callId, attempts });
 ### 7.4 Depuis le consommateur final
 
 ```ts
-import { RateLimitError, AuthError, TimeoutError, LLMRuntimeError } from "@vegacorp/llm-runtime";
+import { RateLimitError, AuthError, TimeoutError, LLMRuntimeError } from "@fanilosendrison/llm-runtime";
 
 try {
   const resp = await adapter.call(request);

@@ -11,7 +11,7 @@ superseded_by: []
 
 # NIB-M-INFRA-UTILS — Module Brief — Utilitaires techniques (clock, callId-generator, logger)
 
-**Package** : `@vegacorp/llm-runtime`
+**Package** : `@fanilosendrison/llm-runtime`
 **Source NX** : §5.5 (Layer 4 — Transverse Services), §9.6 (LoggingPolicy), §11 (Observabilité), §12 (Modèle temporel)
 **NIB-T associé** : §23 (Contract invariants — temporel), §22 (Contract invariants — observabilité)
 
