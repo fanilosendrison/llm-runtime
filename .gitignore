@@ -85,3 +85,6 @@ CLAUDE.md
 
 # ---------- Claude Code local state (nightly-clean uses GHA, clones dotclaude at runtime) ----------
 .claude/
+
+# ---------- Workspace ----------
+specs/
