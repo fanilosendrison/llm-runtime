@@ -24,7 +24,7 @@ function defaultEndpointFor(provider: OpenAICompatibleProvider): string {
 		case "deepseek":
 			return "https://api.deepseek.com/chat/completions";
 		case "mistral":
-			return "https://api.mistral.ai/v1";
+			return "https://api.mistral.ai/v1/chat/completions";
 		case "groq":
 			return "https://api.groq.com/openai/v1";
 		case "together":

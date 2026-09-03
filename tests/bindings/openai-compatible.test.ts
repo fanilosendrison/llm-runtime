@@ -38,7 +38,9 @@ describe("createOpenAICompatibleBinding", () => {
 				{ messages: [{ role: "user", content: "hi" }] },
 				cfg({ model: "mistral-large" }),
 			);
-			expect(http.url).toContain("api.mistral.ai");
+			expect(http.url).toBe(
+				"https://api.mistral.ai/v1/chat/completions",
+			);
 		});
 
 		it("T-OC-03 | groq factory uses groq default endpoint", () => {
@@ -184,7 +186,7 @@ describe("createOpenAICompatibleBinding", () => {
 				cfg({ model: "deepseek-v4-flash" }),
 			);
 			expect(http.bodyJson).toHaveProperty("thinking");
-			expect((http.bodyJson as Record<string, unknown>).thinking).toEqual({
+			expect((http.bodyJson as Record<string, unknown>)["thinking"]).toEqual({
 				type: "enabled",
 			});
 		});
@@ -200,8 +202,8 @@ describe("createOpenAICompatibleBinding", () => {
 				cfg({ model: "deepseek-v4-flash" }),
 			);
 			const body = http.bodyJson as Record<string, unknown>;
-			expect(body.thinking).toEqual({ type: "enabled" });
-			expect(body.reasoning_effort).toBe("high");
+			expect(body["thinking"]).toEqual({ type: "enabled" });
+			expect(body["reasoning_effort"]).toBe("high");
 		});
 
 		it("T-OC-19 | thinking=false does not add thinking block", () => {
@@ -211,7 +213,7 @@ describe("createOpenAICompatibleBinding", () => {
 				cfg({ model: "deepseek-v4-flash" }),
 			);
 			expect(
-				(http.bodyJson as Record<string, unknown>).thinking,
+				(http.bodyJson as Record<string, unknown>)["thinking"],
 			).toBeUndefined();
 		});
 
@@ -222,7 +224,7 @@ describe("createOpenAICompatibleBinding", () => {
 				cfg({ model: "deepseek-v4-flash" }),
 			);
 			expect(
-				(http.bodyJson as Record<string, unknown>).thinking,
+				(http.bodyJson as Record<string, unknown>)["thinking"],
 			).toBeUndefined();
 		});
 
@@ -233,8 +235,8 @@ describe("createOpenAICompatibleBinding", () => {
 				cfg({ model: "deepseek-v4-flash" }),
 			);
 			const body = http.bodyJson as Record<string, unknown>;
-			expect(body.thinking).toEqual({ type: "enabled" });
-			expect(body.reasoning_effort).toBeUndefined();
+			expect(body["thinking"]).toEqual({ type: "enabled" });
+			expect(body["reasoning_effort"]).toBeUndefined();
 		});
 	});
 
