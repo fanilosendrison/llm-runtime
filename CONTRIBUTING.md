@@ -28,6 +28,17 @@ pnpm check  # should pass: typecheck + lint + test
    - `docs(readme): update embedding example`
 5. **Open a PR** against `main`
 
+## Work tracking
+
+Durable future work is tracked in the `llm-runtime Engineering` GitHub Project
+and its Issues. The repository routing, authority boundaries, classification
+fields, and workflow policy live in
+[`docs/repository-governance/llm-runtime-engineering.md`](docs/repository-governance/llm-runtime-engineering.md).
+
+Apply the shared GitHub Engineering Projects operational protocol, revalidate
+every Issue against current sources before implementation, and never treat a
+Project status or Issue closure as a substitute for the checks below.
+
 ## Code Style
 
 - **Linter/Formatter**: [Biome](https://biomejs.dev/) — config in `biome.json`
