@@ -20,7 +20,7 @@ import {
 } from '../services/signal-composer.js';
 import type { EmbeddingAdapterConfig, LLMLogger, ProviderLongId } from '../types.js';
 import { enrichError } from './_internal/enrich-error.js';
-import { normalizeHeaders, runFetch } from './_internal/fetch-utils.js';
+import { type FetchedResponse, normalizeHeaders, runFetch } from './_internal/fetch-utils.js';
 
 export interface ExecuteEmbeddingContext {
   readonly binding: EmbeddingBinding;
@@ -169,10 +169,10 @@ export async function executeEmbedding(
       }
       const composed = composeSignal(externalSignal, timeoutMs);
       const canonical = binding.buildRequest(batchTexts, bindingConfig);
-      let response: Response | undefined;
+      let fetched: FetchedResponse | undefined;
       let fetchError: unknown;
       try {
-        response = await runFetch(
+        fetched = await runFetch(
           fetchImpl,
           canonical.url,
           canonical.headers,
@@ -233,12 +233,13 @@ export async function executeEmbedding(
         continue;
       }
 
-      const res = response!;
+      // Every transport error path above returns or throws, so a materialized
+      // response and body exist here (NIB-M-EXECUTE-EMBEDDING §3.5.12).
+      const { response: res, bodyText } = fetched!;
       const headers = normalizeHeaders(res.headers);
       lastHeaders = headers;
 
       if (!res.ok) {
-        const bodyText = await res.text().catch(() => '');
         const providerSignal: ProviderErrorSignal = {
           aborted: false,
           timeout: false,
@@ -260,7 +261,6 @@ export async function executeEmbedding(
 
       let batchVectors: number[][];
       try {
-        const bodyText = await res.text();
         const bodyJson = bodyText.length === 0 ? null : JSON.parse(bodyText);
         batchVectors = binding.parseEmbeddings(bodyJson, headers);
       } catch (err) {

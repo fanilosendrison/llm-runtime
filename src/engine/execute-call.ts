@@ -38,7 +38,7 @@ import type {
   TerminationReason,
 } from '../types.js';
 import { enrichError } from './_internal/enrich-error.js';
-import { normalizeHeaders, runFetch } from './_internal/fetch-utils.js';
+import { type FetchedResponse, normalizeHeaders, runFetch } from './_internal/fetch-utils.js';
 
 export interface ExecuteCallContext {
   readonly binding: ProviderBinding;
@@ -287,10 +287,10 @@ export async function executeCall(
 
     // ─── build + fetch ───
     const canonical = binding.buildRequest(request, bindingConfig);
-    let response: Response | undefined;
+    let fetched: FetchedResponse | undefined;
     let fetchError: unknown;
     try {
-      response = await runFetch(
+      fetched = await runFetch(
         fetchImpl,
         canonical.url,
         canonical.headers,
@@ -375,13 +375,13 @@ export async function executeCall(
       continue;
     }
 
-    // response is defined here.
-    const res = response!;
+    // Every transport error path above returns or throws, so a materialized
+    // response and body exist here (NIB-M-EXECUTE-CALL §3.20).
+    const { response: res, bodyText } = fetched!;
     const headers = normalizeHeaders(res.headers);
     lastHeaders = headers;
 
     if (!res.ok) {
-      const bodyText = await res.text().catch(() => '');
       const providerSignal: ProviderErrorSignal = {
         aborted: false,
         timeout: false,
@@ -420,7 +420,6 @@ export async function executeCall(
     // ─── parse ───
     let parsed: import('../bindings/types.js').ParsedProviderResponse;
     try {
-      const bodyText = await res.text();
       const bodyJson = bodyText.length === 0 ? null : JSON.parse(bodyText);
       parsed = binding.parseResponse(bodyJson, headers);
     } catch (err) {
