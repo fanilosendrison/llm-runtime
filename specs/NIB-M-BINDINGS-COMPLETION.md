@@ -1,7 +1,7 @@
 ---
 id: NIB-M-BINDINGS-COMPLETION
 type: nib-module
-version: "1.0.0"
+version: "1.0.1"
 scope: llm-runtime
 module: bindings-completion
 status: approved
@@ -377,7 +377,30 @@ Le `ProviderBinding.provider` produit est **exactement** `params.provider` (un `
 
 Identique à §4.2 sauf :
 - `endpoint` : **obligatoire** (via `config.endpoint ?? params.defaultEndpoint`). Pas de fallback vers OpenAI.
-- `providerOptions` : ignoré en v1 (pas de surface définie).
+- `providerOptions` : ignoré pour Mistral, Groq, Together et Ollama. Le seul provider compatible qui expose une option en v1 est DeepSeek (§5.2.1).
+
+### 5.2.1 `providerOptions` DeepSeek — contrôle explicite du mode thinking
+
+DeepSeek active le mode thinking par défaut avec l'effort `high` lorsque le champ `thinking` est absent du body. Un appelant qui veut un comportement non-thinking doit donc envoyer une valeur explicite `disabled`.
+
+Forme normative, typée localement par le binding et `unknown` au niveau du contrat commun (I-9 NIB-S) :
+
+```ts
+interface DeepSeekProviderOptions {
+  thinking?: {
+    type: "enabled" | "disabled";
+    reasoningEffort?: "low" | "high" | "max";   // seulement avec `enabled`
+  };
+}
+```
+
+**Règles normatives** :
+- L'option est interprétée **uniquement** quand `provider === "deepseek"`. Les autres providers compatibles l'ignorent totalement (isolation provider).
+- `type: "disabled"` sérialise `thinking: { type: "disabled" }` et **retire** `reasoning_effort`.
+- `type: "enabled"` sérialise `thinking: { type: "enabled" }` et n'ajoute `reasoning_effort` que si un effort est fourni.
+- L'option `providerOptions.thinking` prime sur le champ legacy `LLMRequest.thinking` / `reasoningEffort`.
+- Une option malformée est **rejetée à la construction** par `createOpenAICompatibleAdapter` (`InvalidRequestError`, I-4 fail-closed). Le binding reste pur et ne throw jamais depuis `buildRequest` ; utilisé directement avec une option malformée, il l'ignore.
+- `buildRequest` ne mute ni `request`, ni `config`, ni `providerOptions`.
 
 ### 5.3 `parseResponse` — identique à OpenAI
 
@@ -868,6 +891,7 @@ Un binding est considéré correctement implémenté quand :
 | Version | Date | Changements |
 |---|---|---|
 | 1.0.0 | 2026-04 | Création initiale. Regroupe 4 bindings completion (Anthropic, OpenAI, OpenAI-compatible pour 5 providers, Google Gemini) en sous-sections normatives d'un seul NIB-M, selon décision de décomposition. |
+| 1.0.1 | 2026-09-14 | §5.2.1 : option `providerOptions.thinking` du binding DeepSeek (contrôle explicite du mode thinking, désormais `enabled` par défaut côté provider). Aucun changement pour les autres providers compatibles. |
 
 ---
 

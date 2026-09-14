@@ -1,6 +1,6 @@
 ---
 id: SPEC-NIB-T-LLMRUNTIME
-version: "0.1.0"
+version: "0.2.0"
 scope: NIB-T-LLMRUNTIME — TDD Tests Brief
 status: draft
 ---
@@ -905,6 +905,26 @@ Chaque factory produit un adapter avec le bon `provider` :
 | T-OC-15 | together | true | true | false |
 | T-OC-16 | ollama | false | true | false |
 
+### 12.7 Acceptance tests — option `providerOptions.thinking` DeepSeek (`tests/bindings/openai-compatible-deepseek-thinking.test.ts`)
+
+DeepSeek active le thinking par défaut. Le binding doit donc pouvoir sérialiser un état explicitement désactivé, et aucun autre provider compatible ne doit recevoir cette option.
+
+| ID | Input | Assertion |
+| --- | --- | --- |
+| T-OC-30 | deepseek, `providerOptions.thinking = { type: "disabled" }` | `bodyJson.thinking === { type: "disabled" }`, `reasoning_effort` absent |
+| T-OC-31 | deepseek, `thinking = { type: "enabled", reasoningEffort: "high" }` | `bodyJson.thinking === { type: "enabled" }`, `bodyJson.reasoning_effort === "high"` |
+| T-OC-32 | deepseek, `thinking = { type: "enabled" }` | `bodyJson.thinking === { type: "enabled" }`, `reasoning_effort` absent |
+| T-OC-33 | deepseek, request legacy `thinking: true` + option `disabled` | l'option prime : `thinking === { type: "disabled" }`, `reasoning_effort` retiré |
+| T-OC-34 | deepseek, `providerOptions = { fetch, unrelated }` | aucun champ `thinking` ajouté, pas de throw |
+| T-OC-35 | deepseek, inputs `deepFreeze` | `buildRequest` pur (pas de throw, pas de mutation) |
+| T-OC-36 | mistral, groq, together, ollama avec l'option | aucun `thinking` ni `reasoning_effort` dans le body (isolation provider) |
+| T-OC-37 | factory deepseek, `thinking.type = "off"` | throw `InvalidRequestError` à la construction |
+| T-OC-38 | factory deepseek, `thinking = "disabled"` (non-objet) | throw `InvalidRequestError` |
+| T-OC-39 | factory deepseek, `reasoningEffort: "ultra"` | throw `InvalidRequestError` |
+| T-OC-40 | factory deepseek, `disabled` + `reasoningEffort` | throw `InvalidRequestError` |
+| T-OC-41 | factory deepseek, option valide ou clés non liées | pas de throw |
+| T-OC-42 | factory mistral avec option DeepSeek malformée | pas de throw (le validateur DeepSeek ne s'applique qu'à DeepSeek) |
+
 ---
 
 ## 13. Tests du binding Google Gemini (`tests/bindings/google.test.ts`)
@@ -1351,6 +1371,18 @@ Setup : mock fetch throw `new TypeError("fetch failed: ECONNRESET")`.
 | T-EC-114 | Avec `maxAttempts: 5` et toutes les attempts échouant de la même façon : throw `TransientProviderError` après 5 attempts |
 | T-EC-115 | Event `llm_call_fetch_error` émis à chaque attempt avec `networkErrorKind` et `message` |
 
+### 18.9 Acceptance tests — le timeout couvre le body (`tests/engine/execute-call-body-timeout.test.ts`)
+
+Setup : mock fetch qui répond les headers immédiatement mais ne complète jamais le body (le stream error à l'abort), `retry.maxAttempts = 1`, `timeout.perAttemptMs = 60`.
+
+| ID | Scénario | Assertion |
+| --- | --- | --- |
+| T-EC-160 | 2xx + body bloqué | throw `TimeoutError` avec `timeoutMs === 60`, en temps borné |
+| T-EC-161 | non-2xx (500) + body bloqué | throw `TimeoutError` (pas de blocage infini sur la lecture d'erreur) |
+| T-EC-162 | abort externe pendant le body bloqué (`perAttemptMs = 5000`, abort à 30ms) | throw `AbortedError` (priorité abort externe), en temps borné |
+| T-EC-163 | transport complet avec compteur de lectures | body matérialisé exactement 1 fois, `response.content === "OK"` |
+| T-EC-164 | succès nominal | `termination === "completed"`, usage correct (non-régression) |
+
 ---
 
 ## 19. Tests de `executeCall` — integrity (`tests/engine/execute-call-integrity.test.ts`)
@@ -1537,6 +1569,15 @@ Setup : adapter embedding, 3 calls réussis.
 - **P-EE-a** : `embed(texts)` retourne un array de même longueur que `texts` quand le call réussit.
 - **P-EE-b** : l'ordre des vecteurs est déterministe et correspond à l'ordre d'entrée (anti-shuffle).
 - **P-EE-c** : `embed([])` retourne toujours `[]` sans appel réseau, peu importe la config.
+
+### 20.10 Acceptance tests — le timeout couvre le body (`tests/engine/execute-embedding-body-timeout.test.ts`)
+
+Setup : même transport à body bloqué que §18.9, `retry.maxAttempts = 1`, `timeout.perAttemptMs = 60`.
+
+| ID | Scénario | Assertion |
+| --- | --- | --- |
+| T-EE-40 | 2xx + body bloqué | throw `TimeoutError` avec `timeoutMs === 60`, en temps borné |
+| T-EE-41 | transport complet avec compteur de lectures | body matérialisé exactement 1 fois, vecteurs retournés dans l'ordre |
 
 ---
 

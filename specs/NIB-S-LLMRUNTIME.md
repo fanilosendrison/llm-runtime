@@ -1,7 +1,7 @@
 ---
 id: NIB-S-LLMRUNTIME
 type: nib-system
-version: "1.0.0"
+version: "1.0.1"
 scope: llm-runtime
 status: approved
 consumers: [claude-code]
@@ -152,6 +152,8 @@ Les adapters sont instanciés par une factory (`createAnthropicAdapter(config)`)
 ### I-9 — Surface publique petite et stable
 
 Le contrat public (types, policies, adapters, factories, erreurs, helpers listés en §5) est minimal et versionné en semver strict. Toute modification breaking = major bump. Les options exotiques provider-spécifiques n'entrent **jamais** dans le contrat public portable — elles vivent dans la config factory de chaque adapter via `providerOptions` typé `unknown` au niveau commun et affiné localement par chaque factory.
+
+**Résolution explicite (mode thinking)** : le mode thinking d'un provider est une option provider-spécifique. Sa forme autoritaire vit dans `providerOptions` (ex. DeepSeek : `{ thinking?: { type: "enabled" | "disabled"; reasoningEffort?: "low" | "high" | "max" } }`, voir NIB-M-BINDINGS-COMPLETION §5.2.1) et non dans le contrat portable. Le champ `LLMRequest.thinking` / `reasoningEffort` qui existe dans le code préexiste à cette clarification : il n'est **pas étendu**, reste purement legacy pour OpenAI et OpenAI-compatible, et sa suppression éventuelle relève d'un changement breaking ultérieur.
 
 ### I-10 — JSON-only en v1
 
@@ -547,7 +549,7 @@ interface BindingConfig {
 }
 ```
 
-Sous-ensemble de `AdapterConfig` restreint aux champs dont le binding a besoin pour construire la requête HTTP. Exclut les policies (retry, timeout, sanitization, integrity, logging) qui sont du ressort de l'engine. `providerOptions` est `unknown` dans cette interface normative — chaque binding l'affine en interne vers son propre type (ex. Anthropic y attend `{ extendedThinking?: { enabled, budgetTokens } }`).
+Sous-ensemble de `AdapterConfig` restreint aux champs dont le binding a besoin pour construire la requête HTTP. Exclut les policies (retry, timeout, sanitization, integrity, logging) qui sont du ressort de l'engine. `providerOptions` est `unknown` dans cette interface normative — chaque binding l'affine en interne vers son propre type (ex. Anthropic y attend `{ extendedThinking?: { enabled, budgetTokens } }` ; DeepSeek y attend `{ thinking?: { type, reasoningEffort? } }`, voir NIB-M-BINDINGS-COMPLETION §5.2.1).
 
 Utilisé par les deux types de bindings (`ProviderBinding` et `EmbeddingBinding`).
 

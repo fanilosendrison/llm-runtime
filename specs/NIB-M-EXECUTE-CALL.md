@@ -1,7 +1,7 @@
 ---
 id: NIB-M-EXECUTE-CALL
 type: nib-module
-version: "1.0.0"
+version: "1.0.1"
 scope: llm-runtime
 module: execute-call
 status: approved
@@ -256,34 +256,39 @@ const { signal: composedSignal, cleanup } = composeSignal(externalSignal, config
 
 Voir NIB-M-SIGNAL-COMPOSER §3.1 pour les règles de priorité (abort externe > timeout interne).
 
-### 3.19 Fetch HTTP
+### 3.19 Fetch HTTP — course agrégée headers + body
+
+L'engine matérialise la réponse **et son body** dans une seule opération mise en course contre le signal composé :
 
 ```ts
-let response: Response;
-let bodyText: string;
-let headers: Record<string, string>;
-try {
-  response = await fetch(canonicalRequest.url, {
-    method: canonicalRequest.method,
-    headers: canonicalRequest.headers,
-    body: canonicalRequest.body,
-    signal: composedSignal,
-  });
-} catch (err) {
-  cleanup();
-  lastHeaders = {};
-  const providerSignal = buildProviderErrorSignalFromFetchError(err, externalSignal);
-  logger.emit({
-    type: "llm_call_fetch_error",
-    callId, provider: binding.provider, model: config.model,
-    attempt,
-    networkErrorKind: providerSignal.networkErrorKind,
-    message: err instanceof Error ? err.message : String(err),
-  });
-  lastError = binding.classifyError(providerSignal);
-  continue;  // retour boucle — décision retry en §3.9 du tour suivant
-}
+const { response, bodyText } = await runFetch(
+  canonicalRequest.url,
+  canonicalRequest.headers,
+  canonicalRequest.bodyJson,
+  composedSignal,
+);
 ```
+
+`runFetch` (helper interne `engine/_internal/fetch-utils.ts`) exécute `fetch(...)` puis `response.text()` dans une même opération agrégée, et la met en course contre le signal composé :
+
+```ts
+const transport = (async () => {
+  const response = await fetchImpl(url, init);
+  const bodyText = await response.text();
+  return { response, bodyText };
+})();
+const abortPromise = new Promise((_resolve, reject) => {
+  if (signal.aborted) { reject(signal.reason); return; }
+  signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+});
+return Promise.race([transport, abortPromise]);
+```
+
+**Règles normatives** :
+- Le timeout par attempt couvre le **cycle complet de la réponse** : phase headers **et** phase body. Un transport qui répond les headers puis bloque le body ne peut jamais dépasser `config.timeout.perAttemptMs`.
+- Le body est matérialisé **au plus une fois** par attempt. L'engine lit `bodyText` et ne rappelle **jamais** `response.text()`.
+- Si `runFetch` rejette, l'engine classe l'échec via `buildProviderErrorSignalFromFetchError(err, externalSignal)` (abort externe > timeout interne) puis `continue` — décision retry en §3.9 du tour suivant.
+- Cas d'erreur réseau/abort/timeout : `lastHeaders = {}` et aucun event `llm_call_provider_error` n'est émis.
 
 **`buildProviderErrorSignalFromFetchError`** — helper interne :
 ```ts
@@ -302,24 +307,28 @@ function buildProviderErrorSignalFromFetchError(err: unknown, externalSignal?: A
 
 **`inferNetworkErrorKind`** (§14.1 step 7.h NX) : helper interne best-effort, non exporté. Codomain `"dns" | "connection" | "reset" | "unknown"` avec fallback obligatoire `"unknown"` et absence de throw.
 
-### 3.20 Lire status + body + normaliser headers
+### 3.20 Normaliser les headers
 
 ```ts
-const status = response.status;
-bodyText = await response.text();
-headers = Object.fromEntries(response.headers.entries());
+const headers = normalizeHeaders(response.headers);
 lastHeaders = headers;
 ```
 
-**Règle normative** : les clés de `headers` après `Object.fromEntries` sont **lowercase** (garanti par l'API `Headers`). Les headers multi-valeur sont collapsés sur la dernière occurrence.
+**Règle normative** : les clés de `headers` sont **lowercase** (I-13). Les headers multi-valeur sont collapsés sur la dernière occurrence.
 
 ### 3.21 cleanup timer
 
 ```ts
-cleanup();
+try {
+  fetched = await runFetch(/* ... */);
+} catch (err) {
+  fetchError = err;
+} finally {
+  cleanup();
+}
 ```
 
-**Règle normative I-5 NIB-S (timer ownership)** : le timer est libéré immédiatement après lecture du body, indépendamment du statut HTTP.
+**Règle normative I-5 NIB-S (timer ownership)** : le timer est libéré **après règlement du couple headers + body**, indépendamment du statut HTTP et indépendamment du fait que l'appel ait réussi, timeouté ou avorté.
 
 ### 3.22 Handling status non-2xx
 
@@ -809,6 +818,7 @@ describe("executeCall — Anthropic happy path", () => {
 | Version | Date | Changements |
 |---|---|---|
 | 1.0.0 | 2026-04 | Création initiale. 28 sous-étapes normatives, helpers internes (enrichAndThrow, buildProviderErrorSignalFromFetchError, inferNetworkErrorKind, extractRawSignal). Séquence d'events mécaniquement testée. Séparation décision/exécution/preuve respectée. |
+| 1.0.1 | 2026-09-14 | §3.19-3.21 : le fetch et la lecture du body sont une course agrégée unique sous le signal composé, afin que le timeout par attempt couvre la phase body (correctif de robustesse, aucun changement de sémantique produit). |
 
 ---
 

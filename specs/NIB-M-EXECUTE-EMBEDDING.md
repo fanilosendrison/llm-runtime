@@ -1,7 +1,7 @@
 ---
 id: NIB-M-EXECUTE-EMBEDDING
 type: nib-module
-version: "1.0.0"
+version: "1.0.1"
 scope: llm-runtime
 module: execute-embedding
 status: approved
@@ -216,35 +216,34 @@ const canonicalRequest = binding.buildRequest(batch, bindingConfig);
 const { signal: composedSignal, cleanup } = composeSignal(options?.signal, config.timeout.perAttemptMs);
 ```
 
-#### 3.5.11 Fetch
+#### 3.5.11 Fetch — course agrégée headers + body
 ```ts
-let response: Response;
-let bodyText: string;
-let headers: Record<string, string>;
+let fetched: FetchedResponse | undefined;
+let fetchError: unknown;
 try {
-  response = await fetch(canonicalRequest.url, {
-    method: canonicalRequest.method,
-    headers: canonicalRequest.headers,
-    body: canonicalRequest.body,
-    signal: composedSignal,
-  });
+  fetched = await runFetch(canonicalRequest.url, canonicalRequest.headers, canonicalRequest.bodyJson, composedSignal);
 } catch (err) {
+  fetchError = err;
+} finally {
   cleanup();
+}
+
+if (fetchError !== undefined) {
   lastHeaders = {};
-  const providerSignal = buildProviderErrorSignalFromFetchError(err, options?.signal);
-  logger.emit({ type: "llm_embedding_fetch_error", callId, provider, model, batchIndex, attempt, networkErrorKind: providerSignal.networkErrorKind, message: err instanceof Error ? err.message : String(err) });
+  const providerSignal = buildProviderErrorSignalFromFetchError(fetchError, options?.signal);
+  logger.emit({ type: "llm_embedding_fetch_error", callId, provider, model, batchIndex, attempt, networkErrorKind: providerSignal.networkErrorKind, message: fetchError instanceof Error ? fetchError.message : String(fetchError) });
   lastError = binding.classifyError(providerSignal);
   continue;
 }
 ```
 
-#### 3.5.12 Lecture status/body/headers
+**Règles normatives** : mêmes garanties que NIB-M-EXECUTE-CALL §3.19 — le timeout par attempt couvre headers et body, le body est matérialisé au plus une fois par attempt, et l'abort externe prime sur le timeout interne.
+
+#### 3.5.12 Lecture des headers
 ```ts
-const status = response.status;
-bodyText = await response.text();
-headers = Object.fromEntries(response.headers.entries());
+const { response, bodyText } = fetched;
+const headers = normalizeHeaders(response.headers);
 lastHeaders = headers;
-cleanup();
 ```
 
 #### 3.5.13 Handling status non-2xx
@@ -587,6 +586,7 @@ describe("executeEmbedding — batching", () => {
 | Version | Date | Changements |
 |---|---|---|
 | 1.0.0 | 2026-04 | Création initiale. Flux embedding avec batching (default 100), boucle retry par batch, échec global, short-circuit `texts: []`. 9 types d'events (sous-ensemble de la taxonomie §11.3 NX). Stats tokens non propagées (convention §15.5). |
+| 1.0.1 | 2026-09-14 | §3.5.11-3.5.12 : le fetch et la lecture du body sont une course agrégée unique sous le signal composé, alignant l'engine embedding sur NIB-M-EXECUTE-CALL §3.19. |
 
 ---
 
