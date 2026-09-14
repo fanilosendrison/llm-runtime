@@ -1,5 +1,6 @@
 // NIB-M-FACTORIES §4 -- OpenAI-compatible adapter factory (parameterized).
 
+import { assertDeepSeekProviderOptions } from '../bindings/deepseek-provider-options.js';
 import { createOpenAICompatibleBinding } from '../bindings/openai-compatible.js';
 import type { OpenAICompatibleProvider } from '../bindings/types.js';
 import { InvalidRequestError } from '../errors/index.js';
@@ -27,6 +28,9 @@ export function createOpenAICompatibleAdapter(
     throw new InvalidRequestError({
       message: `unsupported openai-compatible provider: ${String(config.provider)}`,
     });
+  }
+  if (config.provider === 'deepseek') {
+    assertDeepSeekProviderOptions(config.providerOptions);
   }
   const binding = createOpenAICompatibleBinding(config.provider);
   return createCompletionAdapter(config, binding, config.provider);

@@ -11,6 +11,7 @@ import {
   parseOpenAIResetDuration,
   readOpenAILikeRateLimitHeaders,
 } from './_internal/openai-common.js';
+import { readDeepSeekThinkingOption, withDeepSeekThinking } from './deepseek-provider-options.js';
 import type { OpenAICompatibleProvider, ProviderBinding, ProviderQuirks } from './types.js';
 
 const FALLBACK_RESET_MS = 60_000;
@@ -125,8 +126,17 @@ export function createOpenAICompatibleBinding(provider: OpenAICompatibleProvider
   const fallbackEndpoint = defaultEndpointFor(provider);
   return {
     provider,
-    buildRequest: (request, config) =>
-      buildOpenAILikeRequest(config.endpoint ?? fallbackEndpoint, request, config),
+    buildRequest: (request, config) => {
+      const canonical = buildOpenAILikeRequest(
+        config.endpoint ?? fallbackEndpoint,
+        request,
+        config,
+      );
+      if (provider !== 'deepseek') return canonical;
+      const thinkingOption = readDeepSeekThinkingOption(config.providerOptions);
+      if (thinkingOption === undefined) return canonical;
+      return { ...canonical, bodyJson: withDeepSeekThinking(canonical.bodyJson, thinkingOption) };
+    },
     parseResponse: (body) => parseOpenAILikeResponse(body),
     classifyError: (signal) => classifyOpenAILikeError(signal, provider),
     readRateLimitHeaders: (headers, nowMono) => readFn(headers, nowMono),
