@@ -76,9 +76,19 @@ import { createOpenAICompatibleAdapter } from '@fanilosendrison/llm-runtime';
 
 const llm = createOpenAICompatibleAdapter({
   provider: 'deepseek',
-  model: 'deepseek-chat',
+  model: 'deepseek-flash',
   apiKey: process.env.DEEPSEEK_API_KEY!,
   sanitization: {},
+});
+
+// DeepSeek enables thinking mode (high effort) when the field is absent, so
+// send an explicit value when you need deterministic non-thinking behavior.
+const nonThinking = createOpenAICompatibleAdapter({
+  provider: 'deepseek',
+  model: 'deepseek-flash',
+  apiKey: process.env.DEEPSEEK_API_KEY!,
+  sanitization: {},
+  providerOptions: { thinking: { type: 'disabled' } },
 });
 
 // Embeddings
@@ -171,7 +181,7 @@ await llm.call(request, { signal: controller.signal }); // throws AbortedError
 git clone git@github.com:fanilosendrison/llm-runtime.git
 cd llm-runtime
 pnpm install
-pnpm check          # typecheck + lint + test (619 tests)
+pnpm check          # typecheck + lint + test (644 tests)
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, code style, and PR workflow.
