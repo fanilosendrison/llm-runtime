@@ -1,3 +1,14 @@
+## [0.1.4] - 2026-09-14
+
+### 🐛 Bug Fixes
+
+- *(bindings)* Support explicit DeepSeek thinking-mode control through `providerOptions.thinking`
+- *(engine)* Keep the per-attempt timeout in force while reading the response body
+
+### 📚 Documentation
+
+- *(specs)* Record the DeepSeek thinking option and the aggregate fetch/body timeout guarantee
+
 ## [unreleased]
 
 ### 🚀 Features
