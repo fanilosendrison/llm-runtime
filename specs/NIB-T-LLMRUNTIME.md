@@ -1,6 +1,6 @@
 ---
 id: SPEC-NIB-T-LLMRUNTIME
-version: "0.2.0"
+version: "0.3.0"
 scope: NIB-T-LLMRUNTIME — TDD Tests Brief
 status: draft
 ---
@@ -926,6 +926,23 @@ DeepSeek active le thinking par défaut. Le binding doit donc pouvoir sérialise
 | T-OC-42 | factory mistral avec option DeepSeek malformée | pas de throw (le validateur DeepSeek ne s'applique qu'à DeepSeek) |
 
 ---
+
+### 12.8 Mistral final-text segments (owner-authorized compatibility correction)
+
+Keep existing tests unchanged. Add independent binding and compiled/package
+controls for Mistral strings and ordered text/thinking segment lists. Require
+exact text concatenation with Unicode, whitespace and JSON preserved; exclude
+thinking/signature/reference content before sanitization. Verify metadata, usage,
+request immutability, termination and response identities.
+
+Reject unknown types, non-string text, malformed envelopes/arrays/nested thinking,
+invalid supplied usage/identities, empty lists and lists without final text bytes
+as payload-free `ResponseParseError`. Keep historical string `""` valid and keep
+other provider response contracts unchanged. Verify no reasoning in raw/final
+answers, logs, errors or causes, with sanitization disabled as a positive control.
+Exercise typed one-attempt parse refusal, unchanged retry/timeouts/abort and explicit
+max-token termination behavior through the compiled public adapter. Test the packed
+artifact in a separate local consumer, not merely source-only module resolution.
 
 ## 13. Tests du binding Google Gemini (`tests/bindings/google.test.ts`)
 

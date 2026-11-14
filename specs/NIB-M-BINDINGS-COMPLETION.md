@@ -1,7 +1,7 @@
 ---
 id: NIB-M-BINDINGS-COMPLETION
 type: nib-module
-version: "1.0.1"
+version: "1.0.2"
 scope: llm-runtime
 module: bindings-completion
 status: approved
@@ -402,9 +402,44 @@ interface DeepSeekProviderOptions {
 - Une option malformée est **rejetée à la construction** par `createOpenAICompatibleAdapter` (`InvalidRequestError`, I-4 fail-closed). Le binding reste pur et ne throw jamais depuis `buildRequest` ; utilisé directement avec une option malformée, il l'ignore.
 - `buildRequest` ne mute ni `request`, ni `config`, ni `providerOptions`.
 
-### 5.3 `parseResponse` — identique à OpenAI
+### 5.3 `parseResponse` — provider-scoped decoding
 
-Le contrat de réponse est supposé identique à OpenAI (c'est la définition d'un provider "OpenAI-compatible"). Tout écart structurel (ex. DeepSeek R1 qui émet `<think>` tags **à l'intérieur** de `content`) est **traité par le sanitizer**, pas par le binding. Le binding n'a donc pas de logique spécifique.
+Keep the existing OpenAI response mapping for DeepSeek, Groq, Together and Ollama.
+Do not infer their support for Mistral segment lists. Thinking tags inside a
+historical string remain the engine sanitizer's responsibility.
+
+For Mistral only, accept historical string `message.content` verbatim, including
+an empty string (the existing empty-string response contract remains unchanged).
+Alternatively accept a nonempty list of explicit `type: "text"` and
+`type: "thinking"` segments. Concatenate all text-segment `text` strings in wire
+order without separators, trimming, normalization or JSON interpretation.
+Exclude thinking segments from both `rawContent` and `content` before the engine
+sanitizer, even when thinking-tag sanitization is disabled.
+
+Validate text segments with exactly `type` and string `text`. Validate thinking
+segments with `type`, array `thinking`, optional string-or-null `signature`, and
+optional boolean `closed`. Within thinking, accept documented explicit text,
+reference (`reference_ids` containing strings or safe integers), and tool-reference
+(`tool`, `title`, optional string-or-null `url`, `favicon`, `description`) shapes;
+never return their contents. Unknown segment types, missing explicit types,
+extra segment fields, malformed nested structures, empty arrays and lists with no
+final text bytes must throw `ResponseParseError`. Whitespace text is not silently
+trimmed. Keep diagnostics constant and payload-free, with no provider-body cause.
+
+Require an object envelope, nonempty choices with an object first choice,
+an object message and string finish_reason. Preserve response id/model when
+supplied as strings; reject malformed supplied identities. Preserve optional
+usage and map prompt_tokens/completion_tokens/total_tokens through the existing
+canonical mapping. Supplied known counters must be nonnegative safe integers;
+reject malformed usage containers/counters without inventing counts or imposing
+new arithmetic equality rules. Missing or null usage stays unreported.
+
+Keep first-choice selection, termination mapping, error taxonomy, HTTP
+classification, logging, timeouts, retries and sanitization policies unchanged.
+Place this pure Mistral-only decoder under bindings/_internal; reuse the existing
+OpenAI-like metadata mapping rather than duplicating production mapping rules.
+This narrow owner-authorized compatibility correction does not qualify a live
+model, provider alias or downstream publication.
 
 ### 5.4 `classifyError` — identique à OpenAI pour la base
 
@@ -716,7 +751,10 @@ deepseekBinding.quirks;
 - **Ne classifie PAS** : l'engine n'appelle pas `classifyError` dans ces cas — il throw directement `AbortedError` ou `TimeoutError` depuis le point de détection (§14.1 step 7.h NX). Si `classifyError` reçoit néanmoins un tel signal (erreur amont), il délègue à `classifyFromHttpStatus` qui retourne `TransientProviderError` par défaut (fallback défensif).
 
 ### 9.5 `content` vide après `parseResponse` (tous bindings)
-- `rawContent === ""` n'est **jamais** un throw du binding. C'est un état valide. L'engine applique ensuite le sanitizer, puis `detectHeuristicTruncation` (qui retourne `false` sur `""`, voir NIB-M-SANITIZER §3.3).
+- Preserve the historical valid empty-string response and existing engine
+  sanitization/integrity behavior. Mistral's malformed or no-final-text segment
+  lists are the explicit exception in §5.3: refuse them instead of manufacturing
+  an empty response. This exception does not change other provider bindings.
 
 ### 9.6 `providerOptions` avec champ inconnu
 - Ignoré silencieusement. Pas de warning, pas de throw. Un champ inconnu peut être ajouté par le consommateur pour une version future — compatibilité ascendante.
@@ -755,6 +793,12 @@ import { nowMono, nowWall } from "../services/clock";
 ```
 
 Tout autre import est **interdit**.
+
+For the owner-authorized Mistral response correction (§5.3), the compatible
+binding may import its pure private decoder from `bindings/_internal/` and that
+decoder may reuse the existing OpenAI-like metadata mapping. This bounded
+exception does not permit engine logic, I/O, SDK dependencies or changes to
+other providers.
 
 ### 10.6 Structure de fichier
 
@@ -891,6 +935,7 @@ Un binding est considéré correctement implémenté quand :
 | Version | Date | Changements |
 |---|---|---|
 | 1.0.0 | 2026-04 | Création initiale. Regroupe 4 bindings completion (Anthropic, OpenAI, OpenAI-compatible pour 5 providers, Google Gemini) en sous-sections normatives d'un seul NIB-M, selon décision de décomposition. |
+| 1.0.2 | 2026-11-14 | Owner-authorized Mistral-only final-text segment decoding and typed malformed-list refusal; historical strings and other bindings unchanged. |
 | 1.0.1 | 2026-09-14 | §5.2.1 : option `providerOptions.thinking` du binding DeepSeek (contrôle explicite du mode thinking, désormais `enabled` par défaut côté provider). Aucun changement pour les autres providers compatibles. |
 
 ---

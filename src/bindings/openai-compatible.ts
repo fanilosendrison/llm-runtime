@@ -2,6 +2,7 @@
 // (DeepSeek, Mistral, Groq, Together, Ollama).
 
 import type { RateLimitSnapshot } from '../services/throttle-resolver.js';
+import { parseMistralResponse } from './_internal/mistral-response.js';
 import {
   buildOpenAILikeRequest,
   classifyOpenAILikeError,
@@ -137,7 +138,8 @@ export function createOpenAICompatibleBinding(provider: OpenAICompatibleProvider
       if (thinkingOption === undefined) return canonical;
       return { ...canonical, bodyJson: withDeepSeekThinking(canonical.bodyJson, thinkingOption) };
     },
-    parseResponse: (body) => parseOpenAILikeResponse(body),
+    parseResponse: (body) =>
+      provider === 'mistral' ? parseMistralResponse(body) : parseOpenAILikeResponse(body),
     classifyError: (signal) => classifyOpenAILikeError(signal, provider),
     readRateLimitHeaders: (headers, nowMono) => readFn(headers, nowMono),
     terminationMap: OPENAI_TERMINATION_MAP,
