@@ -1,3 +1,13 @@
+---
+okf_version: "1.0"
+kind: "KnowledgeAsset"
+asset_type: "documentation"
+name: "llm-runtime usage"
+version: "1.0.0"
+domain: "llm-runtime"
+severity: "guideline"
+---
+
 # @fanilosendrison/llm-runtime
 
 > One normalized TypeScript runtime for LLM completions and embeddings across Anthropic, OpenAI, Google Gemini, and any OpenAI-compatible provider.
@@ -103,6 +113,20 @@ const vectors = await embed.embed(['Hello world', 'Bonjour le monde']);
 // vectors[0] → number[1536], vectors[1] → number[1536]
 ```
 
+### Mistral segmented completions
+
+The Mistral adapter accepts historical string responses and explicit `text` /
+`thinking` segment lists. Only final `text` strings are concatenated, in order
+without added separators. Reasoning segments, signatures and reasoning references
+are never included in `rawContent` or `content`, even with thinking-tag stripping
+disabled. This wire decoding does not interpret or repair final-answer JSON.
+
+Malformed or unsupported Mistral segments, invalid supplied usage counters, empty
+lists and lists containing no final text bytes raise `ResponseParseError` without
+quoting the response. Historical empty strings remain valid. Other providers keep
+their existing response behavior; their support for Mistral lists is not inferred.
+No model revision, live-provider qualification or consumer publication is implied.
+
 ## Error Handling
 
 All errors extend `LLMRuntimeError` with a typed `kind` discriminant:
@@ -181,7 +205,8 @@ await llm.call(request, { signal: controller.signal }); // throws AbortedError
 git clone git@github.com:fanilosendrison/llm-runtime.git
 cd llm-runtime
 pnpm install
-pnpm check          # typecheck + lint + test (644 tests)
+pnpm check          # typecheck + lint + source tests
+pnpm test:package   # build, compiled adapter tests, pack and isolated consumer install
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, code style, and PR workflow.

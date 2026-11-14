@@ -1,6 +1,6 @@
 {
 	"name": "@fanilosendrison/llm-runtime",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "Runtime TypeScript pour orchestration de providers LLM (completion + embedding) — moteur unique normalisé pour Anthropic, OpenAI, OpenAI-compatible, Google Gemini.",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -25,6 +25,7 @@
 		"pretest": "node --test tests/toolchain-compatibility.test.mjs",
 		"test": "vitest run --passWithNoTests",
 		"test:watch": "vitest",
+		"test:package": "pnpm run build && node --test tests/package/mistral-response.node.mjs && node tests/package/packed-consumer.mjs",
 		"lint": "biome check --no-errors-on-unmatched src tests",
 		"lint:fix": "biome check --no-errors-on-unmatched --write src tests",
 		"format": "biome format --no-errors-on-unmatched --write src tests",
